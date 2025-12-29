@@ -57,21 +57,51 @@ export async function GET(
       ...game.away_pitchers
     ]
 
+    const batterIds = [...game.home_lineup, ...game.away_lineup]
+    const pitcherIds = [...game.home_pitchers, ...game.away_pitchers]
+
+    const { data: season } = await supabase
+      .from('seasons')
+      .select('year')
+      .eq('id', game.season_id)
+      .single()
+
     const { data: players } = await supabase
       .from('players')
       .select('*')
       .in('id', allPlayerIds)
 
-    const { data: ratings } = await supabase
-      .from('player_ratings')
-      .select('*')
-      .in('player_id', allPlayerIds)
+    const seasonYear = season?.year
+    let ratings: unknown[] = []
+    if (seasonYear) {
+      const [{ data: bat }, { data: pit }] = await Promise.all([
+        supabase
+          .from('player_ratings')
+          .select('*')
+          .eq('year', seasonYear)
+          .eq('rating_type', 'batting')
+          .in('player_id', batterIds),
+        supabase
+          .from('player_ratings')
+          .select('*')
+          .eq('year', seasonYear)
+          .eq('rating_type', 'pitching')
+          .in('player_id', pitcherIds),
+      ])
+      ratings = [...(bat || []), ...(pit || [])]
+    } else {
+      const { data: fallback } = await supabase
+        .from('player_ratings')
+        .select('*')
+        .in('player_id', allPlayerIds)
+      ratings = fallback || []
+    }
 
     return NextResponse.json({ 
       game, 
       plays: plays || [],
       players: players || [],
-      ratings: ratings || []
+      ratings
     })
   } catch (error) {
     console.error('Error fetching game:', error)

@@ -55,6 +55,7 @@ export async function POST(
       name, 
       abbreviation, 
       city,
+      owner_id,
       primary_color = '#1a365d',
       secondary_color = '#e53e3e'
     } = body
@@ -66,26 +67,49 @@ export async function POST(
       )
     }
 
-    // Check if user already has a team in this league
-    const { data: existingTeam } = await supabase
-      .from('teams')
-      .select('id')
-      .eq('league_id', id)
-      .eq('owner_id', user.id)
-      .single()
+    // Determine requested owner.
+    // Default behavior: team is owned by the creating user.
+    // Commissioner may optionally create an unowned team (owner_id = null) or assign ownership.
+    const requestedOwnerId: string | null = owner_id === undefined ? user.id : owner_id
 
-    if (existingTeam) {
-      return NextResponse.json(
-        { error: 'You already have a team in this league' }, 
-        { status: 400 }
-      )
+    if (requestedOwnerId !== user.id) {
+      const { data: league, error: leagueError } = await supabase
+        .from('leagues')
+        .select('commissioner_id')
+        .eq('id', id)
+        .single()
+
+      if (leagueError) {
+        return NextResponse.json({ error: leagueError.message }, { status: 500 })
+      }
+
+      if (!league || league.commissioner_id !== user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
+    // If the team will be owned by the current user, enforce one-team-per-user per league.
+    if (requestedOwnerId === user.id) {
+      const { data: existingTeam } = await supabase
+        .from('teams')
+        .select('id')
+        .eq('league_id', id)
+        .eq('owner_id', user.id)
+        .single()
+
+      if (existingTeam) {
+        return NextResponse.json(
+          { error: 'You already have a team in this league' },
+          { status: 400 }
+        )
+      }
     }
 
     const { data: team, error } = await supabase
       .from('teams')
       .insert({
         league_id: id,
-        owner_id: user.id,
+        owner_id: requestedOwnerId,
         name: name.trim(),
         abbreviation: abbreviation.toUpperCase().substring(0, 3),
         city: city?.trim() || null,

@@ -52,13 +52,43 @@ export async function POST(
       ...game.away_pitchers
     ]
 
-    const { data: ratings } = await supabase
-      .from('player_ratings')
-      .select('*')
-      .in('player_id', allPlayerIds)
+    const batterIds = [...game.home_lineup, ...game.away_lineup]
+    const pitcherIds = [...game.home_pitchers, ...game.away_pitchers]
+
+    const { data: season } = await supabase
+      .from('seasons')
+      .select('year')
+      .eq('id', game.season_id)
+      .single()
+
+    const seasonYear = season?.year
+    let ratings: unknown[] = []
+    if (seasonYear) {
+      const [{ data: bat }, { data: pit }] = await Promise.all([
+        supabase
+          .from('player_ratings')
+          .select('*')
+          .eq('year', seasonYear)
+          .eq('rating_type', 'batting')
+          .in('player_id', batterIds),
+        supabase
+          .from('player_ratings')
+          .select('*')
+          .eq('year', seasonYear)
+          .eq('rating_type', 'pitching')
+          .in('player_id', pitcherIds),
+      ])
+      ratings = [...(bat || []), ...(pit || [])]
+    } else {
+      const { data: fallback } = await supabase
+        .from('player_ratings')
+        .select('*')
+        .in('player_id', allPlayerIds)
+      ratings = fallback || []
+    }
 
     const ratingsMap = new Map<string, PlayerRating>()
-    ratings?.forEach(r => ratingsMap.set(r.player_id, r as PlayerRating))
+    ratings?.forEach((r: any) => ratingsMap.set(`${r.player_id}:${r.rating_type}`, r as PlayerRating))
 
     // Initialize RNG from saved state
     const rng = game.rng_state 
@@ -159,8 +189,8 @@ function simulatePlateAppearance(
   
   const pitcherId = game.current_pitcher_id!
 
-  const batterRating = ratingsMap.get(batterId)
-  const pitcherRating = ratingsMap.get(pitcherId)
+  const batterRating = ratingsMap.get(`${batterId}:batting`)
+  const pitcherRating = ratingsMap.get(`${pitcherId}:pitching`)
 
   const batterProbs = batterRating 
     ? getRatingProbabilities(batterRating) 

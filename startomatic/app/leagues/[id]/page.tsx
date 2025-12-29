@@ -2,6 +2,7 @@ import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/Button'
+import { QuickStartGame } from './QuickStartGame'
 
 interface PageProps {
   params: Promise<{ id: string }>
@@ -225,6 +226,8 @@ export default async function LeagueDetailPage({ params }: PageProps) {
                 <p className="text-gray-400">No teams yet.</p>
               )}
             </div>
+
+            {isCommissioner && <QuickStartGame leagueId={id} />}
 
             {/* Seasons */}
             {isCommissioner && (

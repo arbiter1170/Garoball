@@ -46,7 +46,7 @@ export default function GamePage() {
       
       // Build ratings map
       const ratingsMap = new Map<string, PlayerRating>()
-      data.ratings?.forEach((r: PlayerRating) => ratingsMap.set(r.player_id, r))
+      data.ratings?.forEach((r: PlayerRating) => ratingsMap.set(`${r.player_id}:${r.rating_type}`, r))
       setRatings(ratingsMap)
       
       if (data.plays?.length > 0) {
@@ -121,8 +121,8 @@ export default function GamePage() {
   const currentBatter = players.get(currentBatterId)
   const currentPitcher = players.get(game.current_pitcher_id || '')
   
-  const currentBatterRating = ratings.get(currentBatterId)
-  const currentPitcherRating = ratings.get(game.current_pitcher_id || '')
+  const currentBatterRating = ratings.get(`${currentBatterId}:batting`)
+  const currentPitcherRating = ratings.get(`${game.current_pitcher_id || ''}:pitching`)
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
