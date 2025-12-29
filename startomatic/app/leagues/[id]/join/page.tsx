@@ -66,7 +66,7 @@ export default function JoinLeaguePage() {
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Link href="/dashboard" className="text-2xl font-bold">
-            ⚾ Startomatic 2D
+            ⚾ Garoball
           </Link>
         </div>
       </header>

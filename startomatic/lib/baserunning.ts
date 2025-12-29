@@ -1,4 +1,4 @@
-// Baserunning logic for Startomatic 2D
+// Baserunning logic for Garoball
 // Handles runner advancement on hits and outs
 
 import type { Outcome } from '@/types'

@@ -1,4 +1,4 @@
-// Database types for Startomatic 2D MVP
+// Database types for Garoball MVP
 
 export type Outcome = 'K' | 'BB' | 'OUT' | '1B' | '2B' | '3B' | 'HR'
 export type InningHalf = 'top' | 'bottom'

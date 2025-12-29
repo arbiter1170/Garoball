@@ -33,7 +33,7 @@ export default function GlossaryPage() {
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Link href="/dashboard" className="text-2xl font-bold">
-            ⚾ Startomatic 2D
+            ⚾ Garoball
           </Link>
           <nav className="flex items-center space-x-4">
             <Link href="/dashboard" className="text-gray-300 hover:text-white">
@@ -52,7 +52,7 @@ export default function GlossaryPage() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold mb-2">Baseball Glossary</h1>
         <p className="text-gray-400 mb-8">
-          Understanding the statistics and terminology used in Startomatic 2D.
+          Understanding the statistics and terminology used in Garoball.
         </p>
 
         {/* Quick Navigation */}

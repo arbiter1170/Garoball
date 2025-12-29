@@ -1,4 +1,4 @@
-// Probability calculation for Startomatic 2D
+// Probability calculation for Garoball
 // Based on historical Strat-O-Matic mechanics with batter/pitcher blending
 
 import type { OutcomeProbabilities, DiceTableRanges, Outcome, PlayerRating } from '@/types'

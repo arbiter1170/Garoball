@@ -9,7 +9,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-[url('/field-pattern.svg')] opacity-10" />
         <div className="relative max-w-6xl mx-auto px-4 py-24 sm:py-32">
           <h1 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6">
-            Startomatic 2D
+            Garoball
           </h1>
           <p className="text-xl sm:text-2xl text-blue-100 max-w-2xl mb-8">
             Fast, explainable season sims with tactile dice + card drama and a clean 2D on-field view.
@@ -97,7 +97,7 @@ export default function Home() {
       <footer className="py-12 px-4 bg-gray-900 text-gray-400">
         <div className="max-w-6xl mx-auto text-center">
           <p className="mb-4">
-            Startomatic 2D — MVP v0.1
+            Garoball — MVP v0.1
           </p>
           <p className="text-sm">
             Powered by{' '}

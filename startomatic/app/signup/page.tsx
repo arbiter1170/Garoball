@@ -14,7 +14,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  // Note: Email confirmation is disabled for now; re-enable before production.
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,7 +66,10 @@ export default function SignupPage() {
         console.error('Profile creation error:', profileError)
       }
 
-      setSuccess(true)
+      setLoading(false)
+      router.push('/dashboard')
+      router.refresh()
+      return
     }
 
     setLoading(false)
@@ -88,31 +91,12 @@ export default function SignupPage() {
     }
   }
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 text-center">
-          <div className="bg-green-900/50 border border-green-500 text-green-200 px-6 py-8 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4">Check your email!</h2>
-            <p className="mb-4">
-              We&apos;ve sent a confirmation link to <strong>{email}</strong>.
-              Please click the link to verify your account.
-            </p>
-            <Link href="/login">
-              <Button variant="outline">Back to Login</Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="text-center text-4xl font-bold text-white">
-            ⚾ Startomatic 2D
+            ⚾ Garoball
           </h1>
           <h2 className="mt-6 text-center text-2xl font-bold text-white">
             Create your account

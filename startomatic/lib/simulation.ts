@@ -1,4 +1,4 @@
-// Core game simulation engine for Startomatic 2D
+// Core game simulation engine for Garoball
 // Simulates plate appearances and manages game state
 
 import type {

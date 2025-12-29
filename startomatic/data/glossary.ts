@@ -1,4 +1,4 @@
-// Baseball glossary data for Startomatic 2D
+// Baseball glossary data for Garoball
 
 export interface GlossaryEntry {
   term: string
@@ -175,7 +175,7 @@ export const glossaryData: GlossaryEntry[] = [
     term: 'Dice Roll',
     abbreviation: null,
     category: 'Simulation',
-    short_description: 'The random element in Startomatic that determines play outcomes.',
+    short_description: 'The random element in Garoball that determines play outcomes.',
     long_description: 'Three six-sided dice are rolled, producing a sum from 3 to 18. This sum is mapped to outcome probabilities based on the batter and pitcher ratings.',
     formula: '3d6 → Sum (3-18) → Outcome',
     example: 'Rolling 4-3-5 gives a sum of 12, which maps to a specific outcome range.'
@@ -185,7 +185,7 @@ export const glossaryData: GlossaryEntry[] = [
     abbreviation: null,
     category: 'Simulation',
     short_description: 'How batter and pitcher probabilities are combined to determine outcomes.',
-    long_description: 'In Startomatic 2D, batter and pitcher probabilities are blended 50/50 to determine the outcome distribution for each plate appearance.',
+    long_description: 'In Garoball, batter and pitcher probabilities are blended 50/50 to determine the outcome distribution for each plate appearance.',
     formula: 'Blended = (Batter × 0.5) + (Pitcher × 0.5)',
     example: 'A high-power batter vs a strikeout pitcher will have moderate HR and K probabilities.'
   },
@@ -203,7 +203,7 @@ export const glossaryData: GlossaryEntry[] = [
     abbreviation: null,
     category: 'Simulation',
     short_description: 'The ability to replay a game with identical results using the same seed.',
-    long_description: 'Startomatic uses a seeded random number generator. Given the same seed, lineups, and roster, a game will always produce identical results.',
+    long_description: 'Garoball uses a seeded random number generator. Given the same seed, lineups, and roster, a game will always produce identical results.',
     formula: null,
     example: 'Two users can verify game results by replaying with the same seed.'
   },

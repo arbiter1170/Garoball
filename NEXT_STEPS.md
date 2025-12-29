@@ -8,7 +8,7 @@
 
 2. **Run database migrations and seeds locally**
    - Install the Supabase CLI (`npm i -g supabase`).
-   - Copy the repo skeleton under `startomatic/` (see README) into this repo structure when implemented.
+   - Copy the repo skeleton under `garoball/` (see README) into this repo structure when implemented.
    - From the repo root, run:
      ```bash
      supabase init

@@ -1,4 +1,4 @@
-# Startomatic 2D — Full MVP Spec Sheet (v0.1)
+# Garoball — Full MVP Spec Sheet (v0.1)
 
 ## Locked MVP Decisions
 
@@ -131,7 +131,7 @@ Tables: leagues, teams, players, player_ratings, rosters, seasons, games. Event 
 ## 11) Repo Skeleton
 
 ```
-startomatic/
+garoball/
   app/
     (auth)/
       login/page.tsx
@@ -239,4 +239,4 @@ startomatic/
 
 ---
 
-_Last updated from provided Startomatic 2D MVP spec sheet v0.1._
+_Last updated from provided Garoball MVP spec sheet v0.1._

@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' })
 
 export const metadata: Metadata = {
-  title: 'Startomatic 2D',
+  title: 'Garoball',
   description: 'Modern web-based Strat-style baseball simulator with dice + player cards',
 }
 

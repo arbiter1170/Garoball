@@ -59,7 +59,7 @@ function LoginForm() {
     <div className="max-w-md w-full space-y-8">
       <div>
         <h1 className="text-center text-4xl font-bold text-white">
-          ⚾ Startomatic 2D
+          ⚾ Garoball
         </h1>
         <h2 className="mt-6 text-center text-2xl font-bold text-white">
           Sign in to your account
