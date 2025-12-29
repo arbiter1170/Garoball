@@ -6,6 +6,11 @@ function uniq<T>(arr: T[]): T[] {
   return Array.from(new Set(arr))
 }
 
+function newId(): string {
+  // Node 18+ / modern runtimes
+  return crypto.randomUUID()
+}
+
 async function getCandidateYears(supabase: any, preferredYear?: number): Promise<number[]> {
   const years: number[] = []
   if (Number.isFinite(preferredYear)) years.push(preferredYear as number)
@@ -112,34 +117,34 @@ export async function POST(
     }
 
     if (!activeSeason) {
-      const { data: season, error: seasonError } = await supabase
-        .from('seasons')
-        .insert({
-          league_id: leagueId,
-          name: `${league.name} Season 1`,
-          year: playableYear,
-          status: 'active',
-          updated_at: new Date().toISOString(),
-        })
-        .select('*')
-        .single()
+      const seasonId = newId()
+      const seasonPayload = {
+        id: seasonId,
+        league_id: leagueId,
+        name: `${league.name} Season 1`,
+        year: playableYear,
+        status: 'active',
+        updated_at: new Date().toISOString(),
+      }
 
-      if (seasonError || !season) {
+      const { error: seasonError } = await supabase
+        .from('seasons')
+        .insert(seasonPayload)
+
+      if (seasonError) {
         if (seasonError) console.error('Quickstart: season create error', seasonError)
         return NextResponse.json({ error: seasonError?.message || 'Failed to create season' }, { status: 500 })
       }
 
-      activeSeason = season
+      activeSeason = seasonPayload
     } else if (Number(activeSeason.year) !== playableYear) {
-      const { data: updated, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('seasons')
         .update({ year: playableYear, updated_at: new Date().toISOString() })
         .eq('id', activeSeason.id)
-        .select('*')
-        .single()
 
       if (updateError) console.error('Quickstart: season year update error', updateError)
-      if (!updateError && updated) activeSeason = updated
+      if (!updateError) activeSeason = { ...activeSeason, year: playableYear }
     }
 
     // Ensure at least 2 teams.
@@ -162,19 +167,22 @@ export async function POST(
       city?: string | null
       owner_id?: string | null
     }) => {
-      const { data: team, error } = await supabase
+      const teamId = newId()
+      const teamPayload = {
+        id: teamId,
+        league_id: leagueId,
+        owner_id: payload.owner_id ?? null,
+        name: payload.name,
+        abbreviation: payload.abbreviation,
+        city: payload.city ?? null,
+      }
+
+      const { error } = await supabase
         .from('teams')
-        .insert({
-          league_id: leagueId,
-          owner_id: payload.owner_id ?? null,
-          name: payload.name,
-          abbreviation: payload.abbreviation,
-          city: payload.city ?? null,
-        })
-        .select('*')
-        .single()
+        .insert(teamPayload)
+
       if (error) throw new Error(error.message)
-      return team
+      return teamPayload
     }
 
     let homeTeam = existingTeams[0]
@@ -233,36 +241,38 @@ export async function POST(
     }
 
     // Deterministic-ish pick: take the first N unique IDs.
-    const homeLineup = batIds.slice(0, 9)
-    const awayLineup = batIds.slice(9, 18)
     const homePitcherId = pitIds[0]
     const awayPitcherId = pitIds[1]
 
+    const eligibleBatIds = batIds.filter(id => id !== homePitcherId && id !== awayPitcherId)
+    if (eligibleBatIds.length < 18) {
+      return NextResponse.json(
+        {
+          error: `Not enough distinct batting ratings found for season year ${seasonYear} after selecting pitchers. Try rebuilding ratings for that year.`,
+        },
+        { status: 400 }
+      )
+    }
+
+    const homeLineup = eligibleBatIds.slice(0, 9)
+    const awayLineup = eligibleBatIds.slice(9, 18)
+
+    const homeRosterIds = uniq([...homeLineup, homePitcherId])
+    const awayRosterIds = uniq([...awayLineup, awayPitcherId])
+
     const rosterRows = [
-      ...homeLineup.map(playerId => ({
+      ...homeRosterIds.map(playerId => ({
         team_id: homeTeam.id,
         season_id: activeSeason.id,
         player_id: playerId,
         is_active: true,
       })),
-      ...awayLineup.map(playerId => ({
+      ...awayRosterIds.map(playerId => ({
         team_id: awayTeam.id,
         season_id: activeSeason.id,
         player_id: playerId,
         is_active: true,
       })),
-      {
-        team_id: homeTeam.id,
-        season_id: activeSeason.id,
-        player_id: homePitcherId,
-        is_active: true,
-      },
-      {
-        team_id: awayTeam.id,
-        season_id: activeSeason.id,
-        player_id: awayPitcherId,
-        is_active: true,
-      },
     ]
 
     // Best-effort: upsert roster rows (unique(team_id, season_id, player_id)).
@@ -287,13 +297,14 @@ export async function POST(
       1
     )
 
-    const { data: game, error: gameError } = await supabase
+    const gameId = newId()
+    ;(payload as any).id = gameId
+
+    const { error: gameError } = await supabase
       .from('games')
       .insert(payload)
-      .select('*')
-      .single()
 
-    if (gameError || !game) {
+    if (gameError) {
       if (gameError) console.error('Quickstart: game create error', gameError)
       return NextResponse.json({ error: gameError?.message || 'Failed to create game' }, { status: 500 })
     }
@@ -302,7 +313,7 @@ export async function POST(
       season: activeSeason,
       home_team: homeTeam,
       away_team: awayTeam,
-      game,
+      game: { id: gameId },
     })
   } catch (error) {
     console.error('Error quickstarting league:', error)
