@@ -6,7 +6,8 @@ import { samplePlayers, teamTemplates } from '../data'
 import { 
   calculateBattingProbabilities, 
   calculatePitchingProbabilities,
-  createDiceTable
+  createDiceTable,
+  outcomeToCode
 } from '../lib/probabilities'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -76,6 +77,7 @@ async function seedPlayers() {
       const stats = playerData.batting_stats
       const probs = calculateBattingProbabilities(stats)
       const diceTable = createDiceTable(probs)
+      const diceTableCodes = diceTable.map(outcomeToCode)
       
       const { error: ratingError } = await supabase
         .from('player_ratings')
@@ -91,7 +93,7 @@ async function seedPlayers() {
           p_3b: probs['3B'],
           p_hr: probs.HR,
           p_out: probs.OUT,
-          dice_table: diceTable
+          dice_table: diceTableCodes
         })
       
       if (ratingError) {
@@ -103,6 +105,7 @@ async function seedPlayers() {
       const stats = playerData.pitching_stats
       const probs = calculatePitchingProbabilities(stats)
       const diceTable = createDiceTable(probs)
+      const diceTableCodes = diceTable.map(outcomeToCode)
       
       // Calculate fatigue threshold (outs before pitcher tires)
       const avgOutsPerStart = Math.floor(stats.ip_outs / 30) // Assume ~30 starts
@@ -121,7 +124,7 @@ async function seedPlayers() {
           p_3b: probs['3B'],
           p_hr: probs.HR,
           p_out: probs.OUT,
-          dice_table: diceTable,
+          dice_table: diceTableCodes,
           fatigue_threshold: avgOutsPerStart
         })
       

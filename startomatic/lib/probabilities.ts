@@ -3,6 +3,17 @@
 
 import type { OutcomeProbabilities, DiceTableRanges, Outcome, PlayerRating } from '@/types'
 
+const OUTCOME_ORDER: Outcome[] = ['K', 'BB', 'OUT', '1B', '2B', '3B', 'HR']
+
+export function outcomeToCode(outcome: Outcome): number {
+  const idx = OUTCOME_ORDER.indexOf(outcome)
+  return idx >= 0 ? idx : 2 // default to OUT
+}
+
+export function codeToOutcome(code: number): Outcome {
+  return OUTCOME_ORDER[code] ?? 'OUT'
+}
+
 // Total slots in dice table (3d6 = 16 possible outcomes: 3-18)
 const DICE_TABLE_SIZE = 16
 

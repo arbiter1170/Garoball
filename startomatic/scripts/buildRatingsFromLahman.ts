@@ -14,6 +14,7 @@ import {
   calculateBattingProbabilities,
   calculatePitchingProbabilities,
   createDiceTable,
+  outcomeToCode,
 } from '@/lib/probabilities'
 
 loadScriptEnv()
@@ -43,15 +44,22 @@ if (/^[A-Za-z]:\\/.test(lahmanPath) || (lahmanPath.includes('\\') && lahmanPath.
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 async function mapLahmanIdsToPlayerUuids(lahmanIds: string[]) {
-  const { data, error } = await supabase
-    .from('players')
-    .select('id, lahman_player_id')
-    .in('lahman_player_id', lahmanIds)
-
-  if (error) throw new Error(`Fetching players failed: ${error.message}`)
   const map = new Map<string, string>()
-  for (const row of data ?? []) {
-    if (row.lahman_player_id) map.set(row.lahman_player_id, row.id)
+
+  // PostgREST `.in(...)` is encoded into the request URL; large lists can exceed
+  // URL length limits and fail at the fetch layer.
+  const chunkSize = 200
+  for (let i = 0; i < lahmanIds.length; i += chunkSize) {
+    const chunk = lahmanIds.slice(i, i + chunkSize)
+    const { data, error } = await supabase
+      .from('players')
+      .select('id, lahman_player_id')
+      .in('lahman_player_id', chunk)
+
+    if (error) throw new Error(`Fetching players failed: ${error.message}`)
+    for (const row of data ?? []) {
+      if (row.lahman_player_id) map.set(row.lahman_player_id, row.id)
+    }
   }
   return map
 }
@@ -192,7 +200,8 @@ async function main() {
       const stats = addDerivedBattingStats(bat)
       const probs = calculateBattingProbabilities(stats)
       const diceTable = createDiceTable(probs)
-      await upsertRating(playerId, 'batting', stats, probs, diceTable)
+      const diceTableCodes = diceTable.map(outcomeToCode)
+      await upsertRating(playerId, 'batting', stats, probs, diceTableCodes)
       written++
     }
 
@@ -201,10 +210,11 @@ async function main() {
       const stats = addDerivedPitchingStats(pit)
       const probs = calculatePitchingProbabilities(stats)
       const diceTable = createDiceTable(probs)
+      const diceTableCodes = diceTable.map(outcomeToCode)
 
       // Very rough fatigue threshold: ~ avg outs per start assuming 30 starts.
       const fatigue = Math.floor(stats.ip_outs / 30)
-      await upsertRating(playerId, 'pitching', stats, probs, diceTable, fatigue)
+      await upsertRating(playerId, 'pitching', stats, probs, diceTableCodes, fatigue)
       written++
     }
   }
