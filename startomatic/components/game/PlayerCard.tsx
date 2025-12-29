@@ -95,9 +95,9 @@ export function PlayerCard({ player, rating, type, diceTable, className = '' }: 
         )}
 
         {/* Dice Table (Batter only usually) */}
-        {diceTable && (
+        {(diceTable || rating.dice_table?.length) && (
           <div className="mt-4">
-            <DiceTable ranges={diceTable} />
+            <DiceTable ranges={diceTable} table={rating.dice_table} />
           </div>
         )}
       </div>

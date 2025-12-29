@@ -41,6 +41,8 @@ if (/^[A-Za-z]:\\/.test(lahmanPath) || (lahmanPath.includes('\\') && lahmanPath.
   process.exit(1)
 }
 
+const lahmanPathResolved = lahmanPath as string
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 async function mapLahmanIdsToPlayerUuids(lahmanIds: string[]) {
@@ -174,8 +176,8 @@ async function upsertRating(playerId: string, ratingType: 'batting' | 'pitching'
 }
 
 async function main() {
-  const battingCsv = path.join(lahmanPath, 'Batting.csv')
-  const pitchingCsv = path.join(lahmanPath, 'Pitching.csv')
+  const battingCsv = path.join(lahmanPathResolved, 'Batting.csv')
+  const pitchingCsv = path.join(lahmanPathResolved, 'Pitching.csv')
 
   const battingRows = readCsvRows(battingCsv)
   const pitchingRows = readCsvRows(pitchingCsv)
@@ -183,7 +185,10 @@ async function main() {
   const battingAgg = aggregateBatting(battingRows)
   const pitchingAgg = aggregatePitching(pitchingRows)
 
-  let lahmanIds = [...new Set([...battingAgg.keys(), ...pitchingAgg.keys()])]
+  const idSet = new Set<string>()
+  battingAgg.forEach((_v, id) => idSet.add(id))
+  pitchingAgg.forEach((_v, id) => idSet.add(id))
+  let lahmanIds = Array.from(idSet)
   if (limit > 0) lahmanIds = lahmanIds.slice(0, limit)
 
   console.log(`Resolving ${lahmanIds.length} Lahman ids to players...`)

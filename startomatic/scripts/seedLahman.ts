@@ -38,6 +38,8 @@ if (/^[A-Za-z]:\\/.test(lahmanPath) || (lahmanPath.includes('\\') && lahmanPath.
   process.exit(1)
 }
 
+const lahmanPathResolved = lahmanPath as string
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 type Person = {
@@ -118,13 +120,13 @@ function collectActivePlayerIds(battingPath: string, pitchingPath: string, year:
     const id = (r.playerID ?? '').trim()
     if (id) set.add(id)
   }
-  return [...set]
+  return Array.from(set)
 }
 
 async function main() {
-  const peopleCsv = path.join(lahmanPath, 'People.csv')
-  const battingCsv = path.join(lahmanPath, 'Batting.csv')
-  const pitchingCsv = path.join(lahmanPath, 'Pitching.csv')
+  const peopleCsv = path.join(lahmanPathResolved, 'People.csv')
+  const battingCsv = path.join(lahmanPathResolved, 'Batting.csv')
+  const pitchingCsv = path.join(lahmanPathResolved, 'Pitching.csv')
 
   console.log(`Loading People.csv from ${peopleCsv}`)
   const people = loadPeople(peopleCsv)

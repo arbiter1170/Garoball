@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
@@ -11,11 +11,7 @@ import { BoxScore } from '@/components/game/BoxScore'
 import { DiceDisplay } from '@/components/game/DiceDisplay'
 import { PlayerCard } from '@/components/game/PlayerCard'
 import type { Game, Play, Player, PlayerRating } from '@/types'
-import { 
-  getRatingProbabilities, 
-  blendProbabilities, 
-  probabilitiesToDiceRanges 
-} from '@/lib/probabilities'
+
 
 type GameTab = 'live' | 'boxscore' | 'plays'
 
@@ -128,15 +124,6 @@ export default function GamePage() {
   const currentBatterRating = ratings.get(currentBatterId)
   const currentPitcherRating = ratings.get(game.current_pitcher_id || '')
 
-  const currentDiceTable = useMemo(() => {
-    if (!currentBatterRating || !currentPitcherRating) return undefined
-    
-    const batterProbs = getRatingProbabilities(currentBatterRating)
-    const pitcherProbs = getRatingProbabilities(currentPitcherRating)
-    const blended = blendProbabilities(batterProbs, pitcherProbs)
-    return probabilitiesToDiceRanges(blended)
-  }, [currentBatterRating, currentPitcherRating])
-
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
@@ -184,7 +171,6 @@ export default function GamePage() {
                   player={currentBatter} 
                   rating={currentBatterRating} 
                   type="batter" 
-                  diceTable={currentDiceTable}
                 />
               ) : (
                 <div className="bg-gray-800 rounded-lg p-6 text-center text-gray-400">
