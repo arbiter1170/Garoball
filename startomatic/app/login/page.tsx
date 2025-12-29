@@ -18,25 +18,45 @@ function LoginForm() {
   const redirect = searchParams.get('redirect') || '/dashboard'
   const authError = searchParams.get('error')
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number): Promise<T> => {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error('Sign-in timed out. Please try again.')), ms)
+      ),
+    ])
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (loading) return
     setError(null)
     setLoading(true)
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      const { error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        }),
+        15000
+      )
 
-    if (error) {
-      setError(error.message)
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      // If the session cookie races the server render, the user can briefly bounce
+      // back to /login. Never leave the UI stuck disabled.
+      router.replace(redirect)
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign-in failed. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    router.push(redirect)
-    router.refresh()
   }
 
   const handleOAuthLogin = async (provider: 'google' | 'github') => {
