@@ -6,6 +6,54 @@ function uniq<T>(arr: T[]): T[] {
   return Array.from(new Set(arr))
 }
 
+async function getCandidateYears(supabase: any, preferredYear?: number): Promise<number[]> {
+  const years: number[] = []
+  if (Number.isFinite(preferredYear)) years.push(preferredYear as number)
+
+  // Pull a small window of recent years from ratings (may include duplicates).
+  const { data } = await supabase
+    .from('player_ratings')
+    .select('year')
+    .order('year', { ascending: false })
+    .limit(500)
+
+  const yearsFromRatings: number[] = (data || [])
+    .map((r: any) => Number(r.year))
+    .filter((y: number) => Number.isFinite(y))
+
+  const fromRatings = uniq(yearsFromRatings)
+
+  return uniq([...years, ...fromRatings])
+}
+
+async function findPlayableYear(supabase: any, preferredYear?: number): Promise<number | null> {
+  const years = await getCandidateYears(supabase, preferredYear)
+
+  for (const year of years) {
+    const [{ data: bat }, { data: pit }] = await Promise.all([
+      supabase
+        .from('player_ratings')
+        .select('player_id')
+        .eq('year', year)
+        .eq('rating_type', 'batting')
+        .limit(3000),
+      supabase
+        .from('player_ratings')
+        .select('player_id')
+        .eq('year', year)
+        .eq('rating_type', 'pitching')
+        .limit(3000),
+    ])
+
+    const batIds = uniq((bat || []).map((r: any) => r.player_id as string)).filter(Boolean)
+    const pitIds = uniq((pit || []).map((r: any) => r.player_id as string)).filter(Boolean)
+
+    if (batIds.length >= 18 && pitIds.length >= 2) return year
+  }
+
+  return null
+}
+
 // POST /api/leagues/[id]/quickstart
 // Commissioner-only: ensure an active season + 2 teams + basic rosters, then create a game.
 export async function POST(
@@ -35,7 +83,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Ensure an active season.
+    // Find most relevant season (if any).
     const { data: seasons, error: seasonsError } = await supabase
       .from('seasons')
       .select('*')
@@ -46,16 +94,28 @@ export async function POST(
       return NextResponse.json({ error: seasonsError.message }, { status: 500 })
     }
 
-    let activeSeason = seasons?.find(s => s.status === 'active')
+    let activeSeason = seasons?.find((s: any) => s.status === 'active')
+
+    // Choose a year that actually has enough ratings to play.
+    const preferredYear = activeSeason?.year ?? new Date().getFullYear()
+    const playableYear = await findPlayableYear(supabase, Number(preferredYear))
+    if (!playableYear) {
+      return NextResponse.json(
+        {
+          error:
+            'Not enough player ratings found for any recent year. Run Lahman seeding/ratings build first (e.g. LAHMAN_YEAR=2024 npm run seed:ratings).',
+        },
+        { status: 400 }
+      )
+    }
 
     if (!activeSeason) {
-      const currentYear = new Date().getFullYear()
       const { data: season, error: seasonError } = await supabase
         .from('seasons')
         .insert({
           league_id: leagueId,
           name: `${league.name} Season 1`,
-          year: currentYear,
+          year: playableYear,
           status: 'active',
           updated_at: new Date().toISOString(),
         })
@@ -67,6 +127,15 @@ export async function POST(
       }
 
       activeSeason = season
+    } else if (Number(activeSeason.year) !== playableYear) {
+      const { data: updated, error: updateError } = await supabase
+        .from('seasons')
+        .update({ year: playableYear, updated_at: new Date().toISOString() })
+        .eq('id', activeSeason.id)
+        .select('*')
+        .single()
+
+      if (!updateError && updated) activeSeason = updated
     }
 
     // Ensure at least 2 teams.
@@ -128,44 +197,41 @@ export async function POST(
     // Build simple rosters for the active season (9 batters + 1 pitcher each).
     const seasonYear = Number(activeSeason.year)
 
-    const pickPlayers = async () => {
-      const { data: battingRatings, error: batErr } = await supabase
+    const [{ data: battingRatings, error: batErr }, { data: pitchingRatings, error: pitErr }] = await Promise.all([
+      supabase
         .from('player_ratings')
         .select('player_id')
         .eq('year', seasonYear)
         .eq('rating_type', 'batting')
-        .limit(2000)
-
-      if (batErr) throw new Error(batErr.message)
-
-      const { data: pitchingRatings, error: pitErr } = await supabase
+        .limit(5000),
+      supabase
         .from('player_ratings')
         .select('player_id')
         .eq('year', seasonYear)
         .eq('rating_type', 'pitching')
-        .limit(2000)
+        .limit(5000),
+    ])
 
-      if (pitErr) throw new Error(pitErr.message)
+    if (batErr) throw new Error(batErr.message)
+    if (pitErr) throw new Error(pitErr.message)
 
-      const batIds = uniq((battingRatings || []).map(r => r.player_id as string)).filter(Boolean)
-      const pitIds = uniq((pitchingRatings || []).map(r => r.player_id as string)).filter(Boolean)
+    const batIds = uniq((battingRatings || []).map((r: any) => r.player_id as string)).filter(Boolean)
+    const pitIds = uniq((pitchingRatings || []).map((r: any) => r.player_id as string)).filter(Boolean)
 
-      if (batIds.length < 18 || pitIds.length < 2) {
-        throw new Error(
-          'Not enough player ratings found for this season year. Run Lahman seeding / ratings build first.'
-        )
-      }
-
-      // Deterministic-ish pick: take the first N unique IDs.
-      const homeLineup = batIds.slice(0, 9)
-      const awayLineup = batIds.slice(9, 18)
-      const homePitcherId = pitIds[0]
-      const awayPitcherId = pitIds[1]
-
-      return { homeLineup, awayLineup, homePitcherId, awayPitcherId }
+    if (batIds.length < 18 || pitIds.length < 2) {
+      return NextResponse.json(
+        {
+          error: `Not enough player ratings found for season year ${seasonYear}. Run Lahman seeding/ratings build for that year (e.g. LAHMAN_YEAR=${seasonYear} npm run seed:ratings).`,
+        },
+        { status: 400 }
+      )
     }
 
-    const { homeLineup, awayLineup, homePitcherId, awayPitcherId } = await pickPlayers()
+    // Deterministic-ish pick: take the first N unique IDs.
+    const homeLineup = batIds.slice(0, 9)
+    const awayLineup = batIds.slice(9, 18)
+    const homePitcherId = pitIds[0]
+    const awayPitcherId = pitIds[1]
 
     const rosterRows = [
       ...homeLineup.map(playerId => ({

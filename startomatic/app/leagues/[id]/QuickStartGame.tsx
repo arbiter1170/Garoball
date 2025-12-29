@@ -40,7 +40,7 @@ export function QuickStartGame({ leagueId }: { leagueId: string }) {
     <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 mt-6">
       <h2 className="text-xl font-semibold mb-2">Play</h2>
       <p className="text-gray-400 text-sm mb-4">
-        Creates an active season (if needed), two teams, basic rosters, and a first game.
+        Creates an active season (if needed), two teams, basic rosters, and a first game (using the latest available ratings year).
       </p>
 
       {error && (
