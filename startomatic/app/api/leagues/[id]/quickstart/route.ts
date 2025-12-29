@@ -76,6 +76,7 @@ export async function POST(
       .single()
 
     if (leagueError || !league) {
+      if (leagueError) console.error('Quickstart: league fetch error', leagueError)
       return NextResponse.json({ error: 'League not found' }, { status: 404 })
     }
 
@@ -91,6 +92,7 @@ export async function POST(
       .order('created_at', { ascending: false })
 
     if (seasonsError) {
+      console.error('Quickstart: seasons fetch error', seasonsError)
       return NextResponse.json({ error: seasonsError.message }, { status: 500 })
     }
 
@@ -123,6 +125,7 @@ export async function POST(
         .single()
 
       if (seasonError || !season) {
+        if (seasonError) console.error('Quickstart: season create error', seasonError)
         return NextResponse.json({ error: seasonError?.message || 'Failed to create season' }, { status: 500 })
       }
 
@@ -135,6 +138,7 @@ export async function POST(
         .select('*')
         .single()
 
+      if (updateError) console.error('Quickstart: season year update error', updateError)
       if (!updateError && updated) activeSeason = updated
     }
 
@@ -146,6 +150,7 @@ export async function POST(
       .order('created_at', { ascending: true })
 
     if (teamsError) {
+      console.error('Quickstart: teams fetch error', teamsError)
       return NextResponse.json({ error: teamsError.message }, { status: 500 })
     }
 
@@ -266,6 +271,7 @@ export async function POST(
       .upsert(rosterRows, { onConflict: 'team_id,season_id,player_id' })
 
     if (rosterError) {
+      console.error('Quickstart: roster upsert error', rosterError)
       return NextResponse.json({ error: rosterError.message }, { status: 500 })
     }
 
@@ -288,6 +294,7 @@ export async function POST(
       .single()
 
     if (gameError || !game) {
+      if (gameError) console.error('Quickstart: game create error', gameError)
       return NextResponse.json({ error: gameError?.message || 'Failed to create game' }, { status: 500 })
     }
 
