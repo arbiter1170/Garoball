@@ -12,6 +12,7 @@
     "seed": "tsx scripts/seed.ts",
     "seed:lahman": "tsx scripts/seedLahman.ts",
     "seed:ratings": "tsx scripts/buildRatingsFromLahman.ts",
+    "smoke:db": "tsx scripts/smokeDb.ts",
     "db:migrate": "supabase db reset",
     "db:seed": "supabase db seed"
   },
@@ -26,7 +27,9 @@
     "react-dom": "^18.3.1",
     "seedrandom": "^3.0.5",
     "tailwind-merge": "^2.5.4",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "csv-parse": "^5.6.0",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@types/node": "^20.17.0",

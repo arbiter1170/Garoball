@@ -6,7 +6,22 @@
    - Add a new project in the Supabase dashboard.
    - Record `Project URL` and `anon` public API key; generate a **service role key** for server actions.
 
-2. **Run database migrations and seeds locally**
+2. **Apply DB schema to your hosted Supabase project**
+   The app expects tables like `public.leagues` to exist. If you see errors like
+   “Could not find the table 'public.leagues' in the schema cache”, the migrations were not applied (or PostgREST needs a schema reload).
+
+   Option A (simplest): **Supabase Dashboard → SQL Editor**
+   - Run `startomatic/supabase/migrations/0001_init.sql`
+   - Run `startomatic/supabase/migrations/0002_standings_function.sql`
+   - Then go to **Settings → API → Reload schema** (refreshes PostgREST schema cache)
+
+   Option B: **Supabase CLI (hosted push)**
+   - Install CLI: `npm i -g supabase`
+   - Authenticate: `supabase login`
+   - Link your project: `supabase link --project-ref <your-project-ref>`
+   - Push migrations: `supabase db push`
+
+3. **Run database migrations and seeds locally**
    - Install the Supabase CLI (`npm i -g supabase`).
    - Copy the repo skeleton under `garoball/` (see README) into this repo structure when implemented.
    - From the repo root, run:
@@ -18,7 +33,7 @@
      ```
    - Confirm the Lahman 2024 pack, glossary, and ratings seed files are available in `supabase/seed/` before seeding.
 
-3. **Configure environment variables (Vercel)**
+4. **Configure environment variables (Vercel)**
    Set these in Vercel Project Settings → Environment Variables:
    - `NEXT_PUBLIC_SUPABASE_URL` = Supabase Project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` = Supabase anon public key
@@ -29,18 +44,18 @@
    - `SEED_DATA_PATH` = `supabase/seed/lahman_2024_pack`
    - `GLOSSARY_PATH` = `supabase/seed/glossary.json`
 
-4. **Configure environment variables (Supabase)**
+5. **Configure environment variables (Supabase)**
    - Add `SITE_URL` to match your Vercel domain for Auth redirects.
    - Enable email auth and set SMTP (or use Magic Links).
 
-5. **Vercel build settings**
+6. **Vercel build settings**
    - Framework: Next.js (App Router).
    - Install command: `npm install` (or `pnpm install`).
    - Build command: `next build`.
    - Output directory: `.next`.
    - Add `SUPABASE_URL` and keys as Vercel **Encrypted** vars; never expose service key in client bundles.
 
-6. **Post-deploy verification**
+7. **Post-deploy verification**
    - Create a test account, create a league, seed rosters, start a game, and simulate to completion.
    - Confirm deterministic replay by re-running a finished game with the same seed and comparing play logs.
 

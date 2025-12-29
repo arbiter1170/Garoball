@@ -1,138 +1,140 @@
 import Link from 'next/link'
-import { ArrowRight, Dice6, Users, Trophy, BarChart3 } from 'lucide-react'
 
 export default function Home() {
   return (
-    <main className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-green-900 text-white">
-        <div className="absolute inset-0 bg-[url('/field-pattern.svg')] opacity-10" />
-        <div className="relative max-w-6xl mx-auto px-4 py-24 sm:py-32">
-          <h1 className="text-5xl sm:text-7xl font-bold tracking-tight mb-6">
-            Garoball
-          </h1>
-          <p className="text-xl sm:text-2xl text-blue-100 max-w-2xl mb-8">
-            Fast, explainable season sims with tactile dice + card drama and a clean 2D on-field view.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 bg-white text-blue-900 font-semibold px-6 py-3 rounded-lg hover:bg-blue-50 transition-colors"
-            >
-              Get Started <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 border-2 border-white/50 text-white font-semibold px-6 py-3 rounded-lg hover:bg-white/10 transition-colors"
-            >
-              Sign In
-            </Link>
+    <main className="min-h-screen bg-[#1a472a] relative overflow-hidden">
+      {/* Grass pattern overlay */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 20px,
+            rgba(0,0,0,0.1) 20px,
+            rgba(0,0,0,0.1) 40px
+          )`
+        }} />
+      </div>
+
+      {/* Dirt diamond background decoration */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-20">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <polygon points="50,10 90,50 50,90 10,50" fill="#c4a77d" />
+        </svg>
+      </div>
+
+      {/* Main content */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-12">
+        
+        {/* Logo / Title Card */}
+        <div className="bg-[#f3f0e6] rounded-2xl shadow-2xl border-4 border-[#1e3a8a] overflow-hidden mb-8 max-w-lg w-full">
+          {/* Header stripe */}
+          <div className="bg-[#1e3a8a] py-4 px-6">
+            <h1 className="text-4xl sm:text-5xl font-black text-white text-center tracking-tight">
+              ⚾ GAROBALL
+            </h1>
+          </div>
+          
+          {/* Card body */}
+          <div className="p-6 text-center">
+            <div className="mb-4">
+              <span className="inline-block bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                2D Baseball Arcade
+              </span>
+            </div>
+            <p className="text-gray-700 text-lg mb-6">
+              Roll the dice. Play ball. Simulate entire seasons with classic tabletop mechanics.
+            </p>
+            
+            {/* Dice decoration */}
+            <div className="flex justify-center gap-3 mb-6">
+              {[4, 5, 6].map((val, i) => (
+                <div key={i} className="w-12 h-12 bg-gray-100 rounded-lg border-2 border-gray-300 flex items-center justify-center shadow-md">
+                  <DiceFace value={val} />
+                </div>
+              ))}
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="space-y-3">
+              <Link
+                href="/signup"
+                className="block w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl text-lg transition-all transform hover:scale-105 shadow-lg"
+              >
+                🎮 START PLAYING
+              </Link>
+              <Link
+                href="/login"
+                className="block w-full bg-[#1e3a8a] hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-xl transition-colors"
+              >
+                Sign In
+              </Link>
+            </div>
           </div>
         </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Everything you need for season simulations
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <FeatureCard
-              icon={<Dice6 className="w-8 h-8" />}
-              title="Dice + Cards"
-              description="Classic Strat-style mechanics with 3d6 dice rolls mapped to player outcome tables."
-            />
-            <FeatureCard
-              icon={<Users className="w-8 h-8" />}
-              title="Manage Rosters"
-              description="Import real MLB players from Lahman Database (1871-2024). Set lineups and rotations."
-            />
-            <FeatureCard
-              icon={<Trophy className="w-8 h-8" />}
-              title="Season Sim"
-              description="Generate schedules, simulate games one PA at a time or entire seasons instantly."
-            />
-            <FeatureCard
-              icon={<BarChart3 className="w-8 h-8" />}
-              title="Explainable"
-              description="Every play shows dice rolls, probability tables, and why the outcome occurred."
-            />
-          </div>
+        {/* Feature pills */}
+        <div className="flex flex-wrap justify-center gap-3 mb-8 max-w-xl">
+          <FeaturePill emoji="🎲" text="3d6 Dice System" />
+          <FeaturePill emoji="🃏" text="Player Cards" />
+          <FeaturePill emoji="📊" text="Real MLB Stats" />
+          <FeaturePill emoji="🏆" text="Season Sims" />
         </div>
-      </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Start simulating in under 3 minutes
-          </h2>
-          <div className="space-y-8">
-            <Step
-              number={1}
-              title="Create your league"
-              description="Sign up, create a league, and add teams. Each team gets a full 25-man roster."
-            />
-            <Step
-              number={2}
-              title="Import players"
-              description="Use the Lahman 2024 pack to populate rosters with real MLB players and their stats."
-            />
-            <Step
-              number={3}
-              title="Set your lineup"
-              description="Choose your 9 batters, starting pitcher, and bullpen order."
-            />
-            <Step
-              number={4}
-              title="Play ball!"
-              description="Watch games unfold PA by PA or sim entire seasons. Review standings, stats, and replays."
-            />
-          </div>
+        {/* How it works - Baseball card style */}
+        <div className="grid md:grid-cols-3 gap-4 max-w-4xl w-full px-4">
+          <StepCard number={1} title="Draft Your Team" desc="Build rosters from 150+ years of MLB history" />
+          <StepCard number={2} title="Set Your Lineup" desc="Pick your 9 batters and starting rotation" />
+          <StepCard number={3} title="Play Ball!" desc="Watch games unfold pitch by pitch or sim seasons" />
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-4 bg-gray-900 text-gray-400">
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="mb-4">
-            Garoball — MVP v0.1
-          </p>
-          <p className="text-sm">
-            Powered by{' '}
-            <a href="https://sabr.org/lahman-database/" className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">
-              Lahman Database
-            </a>
-          </p>
-        </div>
-      </footer>
+        {/* Footer */}
+        <footer className="mt-12 text-center text-green-200/60 text-sm">
+          <p>Garoball MVP v0.1 • Powered by Lahman Database</p>
+        </footer>
+      </div>
     </main>
   )
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+function FeaturePill({ emoji, text }: { emoji: string; text: string }) {
   return (
-    <div className="card text-center">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
-        {icon}
-      </div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+    <div className="bg-white/90 backdrop-blur rounded-full px-4 py-2 flex items-center gap-2 shadow-md border border-gray-200">
+      <span className="text-lg">{emoji}</span>
+      <span className="text-gray-800 font-medium text-sm">{text}</span>
     </div>
   )
 }
 
-function Step({ number, title, description }: { number: number; title: string; description: string }) {
+function StepCard({ number, title, desc }: { number: number; title: string; desc: string }) {
   return (
-    <div className="flex gap-6 items-start">
-      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-bold">
-        {number}
+    <div className="bg-[#f3f0e6] rounded-xl border-2 border-[#d4c4a8] p-4 shadow-lg">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-8 h-8 rounded-full bg-[#1e3a8a] text-white flex items-center justify-center font-bold text-sm">
+          {number}
+        </div>
+        <h3 className="font-bold text-gray-900">{title}</h3>
       </div>
-      <div>
-        <h3 className="text-xl font-semibold mb-2">{title}</h3>
-        <p className="text-gray-600">{description}</p>
-      </div>
+      <p className="text-gray-600 text-sm">{desc}</p>
     </div>
+  )
+}
+
+function DiceFace({ value }: { value: number }) {
+  const dots: Record<number, [number, number][]> = {
+    1: [[50, 50]],
+    2: [[25, 25], [75, 75]],
+    3: [[25, 25], [50, 50], [75, 75]],
+    4: [[25, 25], [75, 25], [25, 75], [75, 75]],
+    5: [[25, 25], [75, 25], [50, 50], [25, 75], [75, 75]],
+    6: [[25, 20], [75, 20], [25, 50], [75, 50], [25, 80], [75, 80]],
+  }
+  
+  return (
+    <svg viewBox="0 0 100 100" className="w-8 h-8">
+      {dots[value]?.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r="12" fill="#1f2937" />
+      ))}
+    </svg>
   )
 }

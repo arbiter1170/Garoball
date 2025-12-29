@@ -2,6 +2,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+function isMissingTableSchemaCacheError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+
+  const anyError = error as { code?: unknown; message?: unknown }
+  const code = typeof anyError.code === 'string' ? anyError.code : ''
+  const message = typeof anyError.message === 'string' ? anyError.message : ''
+
+  // PostgREST: { code: 'PGRST205', message: "Could not find the table 'public.leagues' in the schema cache" }
+  return code === 'PGRST205' || /schema cache/i.test(message) || /could not find the table/i.test(message)
+}
+
 // GET /api/leagues - List user's leagues
 export async function GET() {
   try {
@@ -22,6 +33,15 @@ export async function GET() {
       .or(`commissioner_id.eq.${user.id},teams.owner_id.eq.${user.id}`)
 
     if (error) {
+      if (isMissingTableSchemaCacheError(error)) {
+        return NextResponse.json(
+          {
+            error:
+              "Database schema is not installed (missing 'public.leagues'). Apply the migrations in startomatic/supabase/migrations to your Supabase project (or run `supabase db reset` locally), then reload the schema cache in Supabase (Settings → API → Reload schema).",
+          },
+          { status: 500 },
+        )
+      }
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -49,6 +69,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'League name is required' }, { status: 400 })
     }
 
+    // Ensure a profile row exists for this user to satisfy FK commissioner_id -> profiles(id)
+    const { data: profiles, error: profileSelectError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+
+    if (!profiles || profiles.length === 0) {
+      const { error: profileInsertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          username: user.id,
+          display_name: (user as any).email ?? null,
+          avatar_url: null,
+        })
+
+      if (profileInsertError) {
+        return NextResponse.json(
+          {
+            error:
+              'Could not create user profile required for leagues. Please ensure your account has a profile row in public.profiles with id = your user id.',
+          },
+          { status: 500 },
+        )
+      }
+    }
+
     const { data: league, error } = await supabase
       .from('leagues')
       .insert({
@@ -65,6 +112,15 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
+      if (isMissingTableSchemaCacheError(error)) {
+        return NextResponse.json(
+          {
+            error:
+              "Database schema is not installed (missing 'public.leagues'). Apply the migrations in startomatic/supabase/migrations to your Supabase project (or run `supabase db reset` locally), then reload the schema cache in Supabase (Settings → API → Reload schema).",
+          },
+          { status: 500 },
+        )
+      }
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
