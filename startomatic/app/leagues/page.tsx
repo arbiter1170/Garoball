@@ -34,6 +34,9 @@ export default async function LeaguesPage() {
             <Link href="/leagues" className="text-white font-medium">
               Leagues
             </Link>
+            <Link href="/mlb" className="text-gray-300 hover:text-white">
+              MLB
+            </Link>
             <Link href="/glossary" className="text-gray-300 hover:text-white">
               Glossary
             </Link>

@@ -23,6 +23,8 @@ export default function GamePage() {
   const [plays, setPlays] = useState<Play[]>([])
   const [players, setPlayers] = useState<Map<string, Player>>(new Map())
   const [ratings, setRatings] = useState<Map<string, PlayerRating>>(new Map())
+  const [seasonYear, setSeasonYear] = useState<number | null>(null)
+  const [mlbTeams, setMlbTeams] = useState<Map<string, string>>(new Map())
   const [loading, setLoading] = useState(true)
   const [simulating, setSimulating] = useState(false)
   const [activeTab, setActiveTab] = useState<GameTab>('live')
@@ -38,6 +40,7 @@ export default function GamePage() {
       
       setGame(data.game)
       setPlays(data.plays || [])
+      setSeasonYear(typeof data.season_year === 'number' ? data.season_year : null)
       
       // Build player map
       const playerMap = new Map<string, Player>()
@@ -58,6 +61,42 @@ export default function GamePage() {
       setLoading(false)
     }
   }, [gameId])
+
+  const ensureMlbTeamLoaded = useCallback(
+    async (player: Player | undefined) => {
+      if (!player) return
+      if (!seasonYear) return
+      if (!player.lahman_player_id) return
+
+      setMlbTeams(prev => {
+        if (prev.has(player.id)) return prev
+        const next = new Map(prev)
+        // placeholder so we don't refetch on rapid re-renders
+        next.set(player.id, '')
+        return next
+      })
+
+      try {
+        const res = await fetch(
+          `/api/mlb/player-team?year=${encodeURIComponent(String(seasonYear))}&playerID=${encodeURIComponent(
+            player.lahman_player_id
+          )}`
+        )
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) return
+        const teamID = typeof data?.teamID === 'string' ? data.teamID : null
+
+        setMlbTeams(prev => {
+          const next = new Map(prev)
+          next.set(player.id, teamID || '')
+          return next
+        })
+      } catch {
+        // best-effort only
+      }
+    },
+    [seasonYear]
+  )
 
   useEffect(() => {
     fetchGame()
@@ -124,6 +163,11 @@ export default function GamePage() {
   const currentBatterRating = ratings.get(`${currentBatterId}:batting`)
   const currentPitcherRating = ratings.get(`${game.current_pitcher_id || ''}:pitching`)
 
+  useEffect(() => {
+    ensureMlbTeamLoaded(currentBatter)
+    ensureMlbTeamLoaded(currentPitcher)
+  }, [currentBatter, currentPitcher, ensureMlbTeamLoaded])
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
@@ -171,6 +215,7 @@ export default function GamePage() {
                   player={currentBatter} 
                   rating={currentBatterRating} 
                   type="batter" 
+                  mlbTeam={mlbTeams.get(currentBatter.id) || null}
                 />
               ) : (
                 <div className="bg-gray-800 rounded-lg p-6 text-center text-gray-400">
@@ -188,6 +233,7 @@ export default function GamePage() {
                   player={currentPitcher} 
                   rating={currentPitcherRating} 
                   type="pitcher"
+                  mlbTeam={mlbTeams.get(currentPitcher.id) || null}
                   className="w-full max-w-sm"
                 />
               ) : (
@@ -224,6 +270,16 @@ export default function GamePage() {
                   </Button>
                 </div>
               )}
+
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 w-full">
+                <h3 className="text-sm font-bold text-gray-300 mb-2 uppercase">How to Play</h3>
+                <div className="text-sm text-gray-400 space-y-1">
+                  <div>1) Click <span className="text-gray-200">Next At-Bat</span> to roll dice and resolve a plate appearance.</div>
+                  <div>2) Watch runners + outs update on the diamond.</div>
+                  <div>3) Use <span className="text-gray-200">Play-by-Play</span> to read the results and <span className="text-gray-200">Box Score</span> for stats.</div>
+                  <div>4) If you want to fast-forward: <span className="text-gray-200">Sim Inning</span> or <span className="text-gray-200">Sim Game</span>.</div>
+                </div>
+              </div>
             </div>
 
             {/* Right: Diamond + Play-by-Play */}

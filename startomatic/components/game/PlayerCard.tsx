@@ -6,10 +6,11 @@ interface PlayerCardProps {
   rating: PlayerRating
   type: 'batter' | 'pitcher'
   diceTable?: DiceTableRanges
+  mlbTeam?: string | null
   className?: string
 }
 
-export function PlayerCard({ player, rating, type, diceTable, className = '' }: PlayerCardProps) {
+export function PlayerCard({ player, rating, type, diceTable, mlbTeam, className = '' }: PlayerCardProps) {
   const isBatter = type === 'batter'
   const stats = rating.stats as (BattingStats & PitchingStats) // Union for easier access
 
@@ -30,8 +31,13 @@ export function PlayerCard({ player, rating, type, diceTable, className = '' }: 
         <div className="font-bold text-lg truncate">
           {player.first_name} {player.last_name}
         </div>
-        <div className="text-sm font-mono opacity-80">
-          {player.primary_position || (isBatter ? 'DH' : 'P')}
+        <div className="text-right leading-tight">
+          <div className="text-sm font-mono opacity-80">
+            {player.primary_position || (isBatter ? 'DH' : 'P')}
+          </div>
+          {mlbTeam ? (
+            <div className="text-xs font-mono opacity-80">{mlbTeam}</div>
+          ) : null}
         </div>
       </div>
 

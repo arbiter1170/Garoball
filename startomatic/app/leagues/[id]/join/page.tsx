@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 
 const TEAM_COLORS = [
   { name: 'Navy', primary: '#1a365d', secondary: '#e53e3e' },
@@ -21,6 +22,11 @@ export default function JoinLeaguePage() {
   const router = useRouter()
   const params = useParams()
   const leagueId = params.id as string
+
+  const [availableTeams, setAvailableTeams] = useState<Array<{ id: string; name: string; abbreviation: string }>>([])
+  const [selectedTeamId, setSelectedTeamId] = useState('')
+  const [loadingTeams, setLoadingTeams] = useState(false)
+  const [joining, setJoining] = useState(false)
   
   const [name, setName] = useState('')
   const [abbreviation, setAbbreviation] = useState('')
@@ -28,6 +34,75 @@ export default function JoinLeaguePage() {
   const [selectedColors, setSelectedColors] = useState(TEAM_COLORS[0])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const teamOptions = useMemo(() => {
+    const opts = availableTeams.map(t => ({
+      value: t.id,
+      label: `${t.abbreviation} — ${t.name}`,
+    }))
+    return [{ value: '', label: 'Select a team…' }, ...opts]
+  }, [availableTeams])
+
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      setLoadingTeams(true)
+      setError(null)
+      setAvailableTeams([])
+      setSelectedTeamId('')
+
+      try {
+        const res = await fetch(`/api/leagues/${leagueId}`)
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data?.error || 'Failed to load league')
+
+        const teams: Array<{ id: string; name: string; abbreviation: string; owner_id: string | null }> =
+          data?.league?.teams || []
+
+        const openTeams = teams
+          .filter(t => !t.owner_id)
+          .map(t => ({ id: t.id, name: t.name, abbreviation: t.abbreviation }))
+          .sort((a, b) => a.name.localeCompare(b.name))
+
+        if (cancelled) return
+        setAvailableTeams(openTeams)
+      } catch (e) {
+        if (cancelled) return
+        setError(e instanceof Error ? e.message : 'Failed to load league')
+      } finally {
+        if (!cancelled) setLoadingTeams(false)
+      }
+    }
+
+    run()
+    return () => {
+      cancelled = true
+    }
+  }, [leagueId])
+
+  const handleJoinTeam = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedTeamId) return
+
+    setError(null)
+    setJoining(true)
+
+    try {
+      const res = await fetch(`/api/leagues/${leagueId}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: selectedTeamId }),
+      })
+
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Failed to join team')
+
+      router.push(`/teams/${data.team.id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      setJoining(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -79,7 +154,7 @@ export default function JoinLeaguePage() {
         </div>
 
         <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-          <h1 className="text-2xl font-bold mb-6">Create Your Team</h1>
+          <h1 className="text-2xl font-bold mb-6">Join League</h1>
 
           {error && (
             <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded mb-6">
@@ -87,7 +162,38 @@ export default function JoinLeaguePage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-6">
+            <form onSubmit={handleJoinTeam} className="space-y-4">
+              <h2 className="text-lg font-semibold">Pick a Team</h2>
+              <p className="text-sm text-gray-400">
+                Choose an available team to join.
+              </p>
+              <Select
+                label={loadingTeams ? 'Available Teams (loading...)' : 'Available Teams'}
+                id="available-team"
+                value={selectedTeamId}
+                onChange={(e) => setSelectedTeamId(e.target.value)}
+                options={teamOptions}
+                disabled={loadingTeams || availableTeams.length === 0}
+              />
+              <div className="flex justify-end">
+                <Button type="submit" disabled={joining || !selectedTeamId}>
+                  {joining ? 'Joining...' : 'Join Selected Team'}
+                </Button>
+              </div>
+              {availableTeams.length === 0 && !loadingTeams && (
+                <div className="text-sm text-gray-400">
+                  No unowned teams are available to join.
+                </div>
+              )}
+            </form>
+
+            <div className="border-t border-gray-700 pt-6">
+              <h2 className="text-lg font-semibold mb-1">Or Create a Team</h2>
+              <p className="text-sm text-gray-400 mb-4">
+                If your league allows custom teams, you can create one here.
+              </p>
+              <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
                 Team Name *
@@ -189,7 +295,9 @@ export default function JoinLeaguePage() {
                 {loading ? 'Creating...' : 'Create Team'}
               </Button>
             </div>
-          </form>
+              </form>
+            </div>
+          </div>
         </div>
       </main>
     </div>

@@ -101,7 +101,8 @@ export async function GET(
       game, 
       plays: plays || [],
       players: players || [],
-      ratings
+      ratings,
+      season_year: seasonYear || null
     })
   } catch (error) {
     console.error('Error fetching game:', error)
