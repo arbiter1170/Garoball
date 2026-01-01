@@ -1,8 +1,24 @@
 // Supabase middleware helper for session management
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isMockMode, MOCK_USER } from './mock'
 
 export async function updateSession(request: NextRequest) {
+  // In mock mode, skip Supabase auth and treat user as logged in
+  if (isMockMode()) {
+    // Still handle auth page redirects
+    const authPaths = ['/login', '/signup']
+    const isAuthPath = authPaths.some(path => request.nextUrl.pathname === path)
+
+    if (isAuthPath) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
+
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -36,7 +52,7 @@ export async function updateSession(request: NextRequest) {
 
   // Protected routes - redirect to login if not authenticated
   const protectedPaths = ['/dashboard', '/leagues', '/games']
-  const isProtectedPath = protectedPaths.some(path => 
+  const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   )
 
@@ -49,7 +65,7 @@ export async function updateSession(request: NextRequest) {
 
   // Redirect logged-in users away from auth pages
   const authPaths = ['/login', '/signup']
-  const isAuthPath = authPaths.some(path => 
+  const isAuthPath = authPaths.some(path =>
     request.nextUrl.pathname === path
   )
 

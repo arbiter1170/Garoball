@@ -1,8 +1,13 @@
 // Supabase client for server-side usage (Server Components, Route Handlers)
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { createMockClient, isMockMode } from './mock'
 
 export async function createClient() {
+  if (isMockMode()) {
+    return createMockClient() as ReturnType<typeof createServerClient>
+  }
+
   const cookieStore = await cookies()
 
   return createServerClient(

@@ -182,40 +182,43 @@ garoball/
       GlossaryDrawer.tsx
       StatTooltip.tsx
 
-  server/
-    sim/
-      engine.ts
-      rng.ts
-      blend.ts
-      diceTable.ts
-      baserunning.ts
-      explain.ts
-      rulesets/basicPlus.ts
-    services/
-      standingsService.ts
-      statsService.ts
-    repos/
-      gamesRepo.ts
-      leaguesRepo.ts
-      seasonsRepo.ts
+  lib/
+    simulation.ts        # Core game simulation engine
+    baserunning.ts       # Runner advancement logic
+    probabilities.ts     # Outcome probability calculations
+    rng.ts               # Seeded RNG for determinism
+    index.ts             # Library exports
+    supabase/
+      client.ts          # Browser Supabase client
+      server.ts          # Server Supabase client
+      middleware.ts      # Auth middleware
+      mock.ts            # Mock client for dev (no backend)
+
+  data/
+    samplePlayers.ts     # Sample player data for seeding
+    glossary.ts          # Stat glossary definitions
+    index.ts
 
   supabase/
     migrations/
       0001_init.sql
+      0002_standings_function.sql
     seed/
       lahman_2024_pack/...
       glossary.json
-      ratings_2024.json
 
   scripts/
-    seedLahman.ts
+    seed.ts              # Main seed script
+    seedLahman.ts        # Lahman data import
     buildRatingsFromLahman.ts
-    generateSchedule.ts
+    smokeDb.ts           # DB connection test
 
-  tests/
-    sim_determinism.test.ts
+  __tests__/
+    simulation.test.ts
     baserunning.test.ts
-    standings.test.ts
+    probabilities.test.ts
+    rng.test.ts
+    stats_wiring.test.ts
 ```
 
 ---
