@@ -18,7 +18,7 @@ type GameTab = 'live' | 'boxscore' | 'plays'
 export default function GamePage() {
   const params = useParams()
   const gameId = params.id as string
-  
+
   const [game, setGame] = useState<Game | null>(null)
   const [plays, setPlays] = useState<Play[]>([])
   const [players, setPlayers] = useState<Map<string, Player>>(new Map())
@@ -35,23 +35,23 @@ export default function GamePage() {
     try {
       const res = await fetch(`/api/games/${gameId}`)
       const data = await res.json()
-      
+
       if (!res.ok) throw new Error(data.error)
-      
+
       setGame(data.game)
       setPlays(data.plays || [])
       setSeasonYear(typeof data.season_year === 'number' ? data.season_year : null)
-      
+
       // Build player map
       const playerMap = new Map<string, Player>()
       data.players?.forEach((p: Player) => playerMap.set(p.id, p))
       setPlayers(playerMap)
-      
+
       // Build ratings map
       const ratingsMap = new Map<string, PlayerRating>()
       data.ratings?.forEach((r: PlayerRating) => ratingsMap.set(`${r.player_id}:${r.rating_type}`, r))
       setRatings(ratingsMap)
-      
+
       if (data.plays?.length > 0) {
         setLastPlay(data.plays[data.plays.length - 1])
       }
@@ -102,26 +102,41 @@ export default function GamePage() {
     fetchGame()
   }, [fetchGame])
 
+  // Compute current batter/pitcher for MLB team loading
+  // These need to be computed before early returns to satisfy React hooks rules
+  const currentBatterId = game
+    ? (game.half === 'top'
+      ? game.away_lineup[game.current_batter_idx % game.away_lineup.length]
+      : game.home_lineup[game.current_batter_idx % game.home_lineup.length])
+    : null
+  const currentBatter = currentBatterId ? players.get(currentBatterId) : undefined
+  const currentPitcher = game?.current_pitcher_id ? players.get(game.current_pitcher_id) : undefined
+
+  useEffect(() => {
+    if (currentBatter) ensureMlbTeamLoaded(currentBatter)
+    if (currentPitcher) ensureMlbTeamLoaded(currentPitcher)
+  }, [currentBatter, currentPitcher, ensureMlbTeamLoaded])
+
   const simulatePlay = async (mode: 'play' | 'inning' | 'game' = 'play') => {
     if (!game || simulating) return
-    
+
     setSimulating(true)
     setError(null)
-    
+
     try {
       const res = await fetch(`/api/games/${gameId}/simulate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mode })
       })
-      
+
       const data = await res.json()
-      
+
       if (!res.ok) throw new Error(data.error)
-      
+
       setGame(data.game)
       setPlays(prev => [...prev, ...data.plays])
-      
+
       if (data.plays?.length > 0) {
         setLastPlay(data.plays[data.plays.length - 1])
       }
@@ -153,20 +168,9 @@ export default function GamePage() {
     )
   }
 
-  const currentBatterId = game.half === 'top' 
-    ? game.away_lineup[game.current_batter_idx % game.away_lineup.length]
-    : game.home_lineup[game.current_batter_idx % game.home_lineup.length]
-  
-  const currentBatter = players.get(currentBatterId)
-  const currentPitcher = players.get(game.current_pitcher_id || '')
-  
-  const currentBatterRating = ratings.get(`${currentBatterId}:batting`)
-  const currentPitcherRating = ratings.get(`${game.current_pitcher_id || ''}:pitching`)
-
-  useEffect(() => {
-    ensureMlbTeamLoaded(currentBatter)
-    ensureMlbTeamLoaded(currentPitcher)
-  }, [currentBatter, currentPitcher, ensureMlbTeamLoaded])
+  // currentBatterId, currentBatter, currentPitcher already computed above
+  const currentBatterRating = currentBatterId ? ratings.get(`${currentBatterId}:batting`) : undefined
+  const currentPitcherRating = game?.current_pitcher_id ? ratings.get(`${game.current_pitcher_id}:pitching`) : undefined
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
@@ -194,11 +198,10 @@ export default function GamePage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition ${
-                activeTab === tab
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700'
-              }`}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition ${activeTab === tab
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                }`}
             >
               {tab === 'live' ? 'Live View' : tab === 'boxscore' ? 'Box Score' : 'Play-by-Play'}
             </button>
@@ -211,10 +214,10 @@ export default function GamePage() {
             {/* Left: Batter Card */}
             <div className="lg:col-span-3">
               {currentBatter && currentBatterRating ? (
-                <PlayerCard 
-                  player={currentBatter} 
-                  rating={currentBatterRating} 
-                  type="batter" 
+                <PlayerCard
+                  player={currentBatter}
+                  rating={currentBatterRating}
+                  type="batter"
                   mlbTeam={mlbTeams.get(currentBatter.id) || null}
                 />
               ) : (
@@ -227,11 +230,11 @@ export default function GamePage() {
             {/* Center: Dice Tray + Pitcher Card */}
             <div className="lg:col-span-5 flex flex-col items-center space-y-6">
               <DiceDisplay values={lastPlay?.dice_values || [1, 1, 1]} />
-              
+
               {currentPitcher && currentPitcherRating ? (
-                <PlayerCard 
-                  player={currentPitcher} 
-                  rating={currentPitcherRating} 
+                <PlayerCard
+                  player={currentPitcher}
+                  rating={currentPitcherRating}
                   type="pitcher"
                   mlbTeam={mlbTeams.get(currentPitcher.id) || null}
                   className="w-full max-w-sm"
@@ -245,14 +248,14 @@ export default function GamePage() {
               {/* Simulation Controls */}
               {game.status !== 'completed' && (
                 <div className="flex justify-center space-x-3 w-full">
-                  <Button 
+                  <Button
                     onClick={() => simulatePlay('play')}
                     disabled={simulating}
                     className="flex-1"
                   >
                     {simulating ? 'Simulating...' : 'Next At-Bat'}
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={() => simulatePlay('inning')}
                     disabled={simulating}
@@ -260,7 +263,7 @@ export default function GamePage() {
                   >
                     Sim Inning
                   </Button>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={() => simulatePlay('game')}
                     disabled={simulating}
@@ -291,7 +294,7 @@ export default function GamePage() {
                   </span>
                   <span>{game.outs} out{game.outs !== 1 ? 's' : ''}</span>
                 </div>
-                <DiamondView 
+                <DiamondView
                   runner1b={game.runner_1b}
                   runner2b={game.runner_2b}
                   runner3b={game.runner_3b}
