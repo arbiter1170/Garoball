@@ -14,6 +14,25 @@ export function codeToOutcome(code: number): Outcome {
   return OUTCOME_ORDER[code] ?? 'OUT'
 }
 
+// Get outcome from a random number (0-1) and probabilities
+export function getOutcomeFromProbability(
+  randomValue: number,
+  probs: OutcomeProbabilities
+): Outcome {
+  const normalized = normalizeProbabilities(probs)
+  const outcomes: Outcome[] = ['K', 'BB', 'OUT', '1B', '2B', '3B', 'HR']
+
+  let cumulative = 0
+  for (const outcome of outcomes) {
+    cumulative += normalized[outcome]
+    if (randomValue < cumulative) {
+      return outcome
+    }
+  }
+
+  return 'OUT' // Fallback
+}
+
 // Total slots in dice table (3d6 = 16 possible outcomes: 3-18)
 const DICE_TABLE_SIZE = 16
 
@@ -32,7 +51,7 @@ export const LEAGUE_AVERAGE_PROBS: OutcomeProbabilities = {
 function normalizeProbabilities(probs: OutcomeProbabilities): OutcomeProbabilities {
   const total = probs.K + probs.BB + probs.OUT + probs['1B'] + probs['2B'] + probs['3B'] + probs.HR
   if (Math.abs(total - 1) < 0.001) return probs
-  
+
   return {
     K: probs.K / total,
     BB: probs.BB / total,
@@ -64,7 +83,7 @@ export function blendProbabilities(
   batterWeight: number = 0.5
 ): OutcomeProbabilities {
   const pitcherWeight = 1 - batterWeight
-  
+
   return normalizeProbabilities({
     K: batterProbs.K * batterWeight + pitcherProbs.K * pitcherWeight,
     BB: batterProbs.BB * batterWeight + pitcherProbs.BB * pitcherWeight,
@@ -82,25 +101,25 @@ export function probabilitiesToDiceRanges(probs: OutcomeProbabilities): DiceTabl
   const normalized = normalizeProbabilities(probs)
   const outcomes: Outcome[] = ['K', 'BB', 'OUT', '1B', '2B', '3B', 'HR']
   const ranges: Partial<DiceTableRanges> = {}
-  
+
   let currentStart = 0
-  
+
   for (const outcome of outcomes) {
     const slots = Math.round(normalized[outcome] * DICE_TABLE_SIZE)
     const end = Math.min(currentStart + Math.max(slots - 1, 0), DICE_TABLE_SIZE - 1)
-    
+
     ranges[outcome] = [currentStart, end]
     currentStart = end + 1
-    
+
     // Ensure we don't overflow
     if (currentStart >= DICE_TABLE_SIZE) {
       currentStart = DICE_TABLE_SIZE - 1
     }
   }
-  
+
   // Make sure the last outcome reaches the end
   ranges.HR = [ranges.HR![0], DICE_TABLE_SIZE - 1]
-  
+
   return ranges as DiceTableRanges
 }
 
@@ -110,14 +129,14 @@ export function getOutcomeFromDiceIndex(
   ranges: DiceTableRanges
 ): Outcome {
   const outcomes: Outcome[] = ['K', 'BB', 'OUT', '1B', '2B', '3B', 'HR']
-  
+
   for (const outcome of outcomes) {
     const [min, max] = ranges[outcome]
     if (diceIndex >= min && diceIndex <= max) {
       return outcome
     }
   }
-  
+
   // Fallback (should never happen)
   return 'OUT'
 }
@@ -127,11 +146,11 @@ export function getOutcomeFromDiceIndex(
 export function createDiceTable(probs: OutcomeProbabilities): Outcome[] {
   const ranges = probabilitiesToDiceRanges(probs)
   const table: Outcome[] = []
-  
+
   for (let i = 0; i < DICE_TABLE_SIZE; i++) {
     table.push(getOutcomeFromDiceIndex(i, ranges))
   }
-  
+
   return table
 }
 
@@ -148,9 +167,9 @@ export function calculateBattingProbabilities(stats: {
 }): OutcomeProbabilities {
   const pa = stats.pa || stats.ab + stats.bb
   if (pa === 0) return LEAGUE_AVERAGE_PROBS
-  
+
   const singles = stats.h - stats['2b'] - stats['3b'] - stats.hr
-  
+
   return normalizeProbabilities({
     K: stats.so / pa,
     BB: stats.bb / pa,
@@ -172,15 +191,15 @@ export function calculatePitchingProbabilities(stats: {
   // Estimate plate appearances from outs + hits + walks
   const pa = stats.ip_outs + stats.h + stats.bb
   if (pa === 0) return LEAGUE_AVERAGE_PROBS
-  
+
   // Estimate hit types (pitching stats often lack breakdown)
   const singles = Math.round(stats.h * 0.7) // ~70% singles
   const doubles = Math.round(stats.h * 0.2)  // ~20% doubles
   const triples = Math.round(stats.h * 0.02) // ~2% triples
   const hrs = stats.hr
-  
+
   const outs = stats.ip_outs - stats.so // Non-K outs
-  
+
   return normalizeProbabilities({
     K: stats.so / pa,
     BB: stats.bb / pa,
