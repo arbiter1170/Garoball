@@ -41,6 +41,9 @@ const config: Config = {
           '100%': { backgroundPosition: '-200% center' },
         },
       },
+      backgroundSize: {
+        'shimmer': '200% 100%',
+      },
     },
   },
   plugins: [],

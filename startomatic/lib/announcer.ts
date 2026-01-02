@@ -190,7 +190,7 @@ function getCallTemplates(outcome: Outcome, dramaLevel: DramaLevel): string[] {
   }
 
   return templates[outcome]?.[dramaLevel] || [
-    "That's a play."
+    `${outcome} - ${dramaLevel} situation`
   ]
 }
 

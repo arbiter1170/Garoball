@@ -87,8 +87,12 @@ export function calculateLeverageIndex(game: Game): number {
     leverage *= 2.0
   }
   
-  return Math.max(0, Math.min(leverage, 10)) // Cap at 10
+  return Math.max(0, Math.min(leverage, MAX_LEVERAGE_INDEX)) // Cap between 0 and 10
 }
+
+// Maximum leverage index cap (10 represents extremely high leverage situations)
+// Values above 10 are theoretically possible but practically very rare
+const MAX_LEVERAGE_INDEX = 10
 
 /**
  * Get drama level based on leverage index

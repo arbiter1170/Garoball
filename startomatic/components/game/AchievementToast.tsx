@@ -47,7 +47,7 @@ export function AchievementToast({
     uncommon: 'bg-green-100 border-green-400 text-green-800',
     rare: 'bg-blue-100 border-blue-400 text-blue-800',
     epic: 'bg-purple-100 border-purple-400 text-purple-800',
-    legendary: 'bg-gradient-to-r from-yellow-200 to-orange-200 border-yellow-500 text-yellow-900'
+    legendary: 'bg-gradient-to-r from-yellow-200 via-orange-200 to-yellow-200 border-yellow-500 text-yellow-900'
   }
   
   const rarityColor = rarityColors[achievement.rarity]
@@ -64,7 +64,7 @@ export function AchievementToast({
         className={cn(
           'rounded-lg border-2 p-4 shadow-lg backdrop-blur-sm',
           rarityColor,
-          isLegendary && 'animate-shimmer bg-gradient-to-r from-yellow-200 via-orange-200 to-yellow-200 bg-[length:200%_100%]',
+          isLegendary && 'animate-shimmer bg-shimmer',
           'min-w-[280px] max-w-[320px]'
         )}
         onClick={handleDismiss}
