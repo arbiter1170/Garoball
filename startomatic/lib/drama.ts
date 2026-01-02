@@ -3,6 +3,10 @@
 
 import type { Game, Outcome } from '@/types'
 
+// Maximum leverage index cap (10 represents extremely high leverage situations)
+// Values above 10 are theoretically possible but practically very rare
+const MAX_LEVERAGE_INDEX = 10
+
 // Drama levels based on leverage index
 export type DramaLevel = 'routine' | 'tense' | 'clutch' | 'legendary'
 
@@ -89,10 +93,6 @@ export function calculateLeverageIndex(game: Game): number {
   
   return Math.max(0, Math.min(leverage, MAX_LEVERAGE_INDEX)) // Cap between 0 and 10
 }
-
-// Maximum leverage index cap (10 represents extremely high leverage situations)
-// Values above 10 are theoretically possible but practically very rare
-const MAX_LEVERAGE_INDEX = 10
 
 /**
  * Get drama level based on leverage index
