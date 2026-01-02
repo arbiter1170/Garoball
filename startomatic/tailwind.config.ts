@@ -25,6 +25,7 @@ const config: Config = {
       animation: {
         'dice-roll': 'dice-roll 0.5s ease-out',
         'slide-up': 'slide-up 0.3s ease-out',
+        'shimmer': 'shimmer 2s ease-in-out infinite',
       },
       keyframes: {
         'dice-roll': {
@@ -34,6 +35,10 @@ const config: Config = {
         'slide-up': {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'shimmer': {
+          '0%': { backgroundPosition: '200% center' },
+          '100%': { backgroundPosition: '-200% center' },
         },
       },
     },
