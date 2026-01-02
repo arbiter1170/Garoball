@@ -403,13 +403,9 @@ function isGameOver(game: Game): boolean {
   }
 
   // After 9+ complete innings when scores are different
-  // Check at the start of top of next inning (after bottom is complete)
-  if (game.inning >= 9 && game.half === 'top' && game.outs === 0 && game.home_score !== game.away_score) {
-    return true
-  }
-  
-  // After bottom of 9th+ is complete with 3 outs and away team is still ahead
-  if (game.inning >= 9 && game.half === 'bottom' && game.outs >= 3 && game.away_score > game.home_score) {
+  // This is checked at the start of a new inning (after half-inning transition)
+  // When transitioning from bottom of Nth to top of (N+1)th with different scores
+  if (game.inning >= 10 && game.half === 'top' && game.outs === 0 && game.home_score !== game.away_score) {
     return true
   }
 

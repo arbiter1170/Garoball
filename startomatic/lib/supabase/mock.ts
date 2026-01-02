@@ -96,9 +96,12 @@ function createEmptyPitchingLine(): PlayerPitchingLine {
 }
 
 // Create team lineups from mock players
-// First 9 batters (players 1-9) for team 1
+// Using the same player pool for both teams - this is intentional for mock simplicity
+// In a real app with a database, each team would have unique players
+// Note: Both teams using same player IDs works fine because:
+// 1. Box scores track stats separately (batting[playerId] per team)
+// 2. The simulation only needs player IDs to look up ratings
 const TEAM1_LINEUP = ['player-1', 'player-2', 'player-3', 'player-4', 'player-5', 'player-6', 'player-7', 'player-8', 'player-9']
-// Same players for team 2 (in a real app, each team would have unique players)
 const TEAM2_LINEUP = ['player-1', 'player-2', 'player-3', 'player-4', 'player-5', 'player-6', 'player-7', 'player-8', 'player-9']
 // Pitchers are players 10-12 (SP) and 13-16 (RP/CL)
 const TEAM1_PITCHERS = ['player-10']
