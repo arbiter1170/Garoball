@@ -303,14 +303,20 @@ function applyResult(
 
   // Check for inning change
   if (updatedGame.outs >= 3) {
-    // Record inning runs
+    // Record inning runs - calculate how many runs were scored this half-inning
+    // We need to determine the score at the start of this half-inning vs now
     const teamBox = game.half === 'top' ? updatedGame.box_score.away : updatedGame.box_score.home
+    
+    // Calculate runs scored this inning by summing all previous innings and comparing to total
+    const previousInningsRuns = teamBox.innings.reduce((sum, r) => sum + r, 0)
+    const currentTotalScore = game.half === 'top' ? updatedGame.away_score : updatedGame.home_score
+    const inningRuns = currentTotalScore - previousInningsRuns
+    
+    // Ensure innings array is long enough
     while (teamBox.innings.length < game.inning) {
       teamBox.innings.push(0)
     }
-    teamBox.innings[game.inning - 1] = game.half === 'top'
-      ? updatedGame.away_score - (game.away_score - baseResult.runsScored)
-      : updatedGame.home_score - (game.home_score - baseResult.runsScored)
+    teamBox.innings[game.inning - 1] = inningRuns
 
     updatedGame.outs = 0
     updatedGame.runner_1b = null
@@ -391,13 +397,19 @@ function updateBoxScore(
 function isGameOver(game: Game): boolean {
   if (game.inning < 9) return false
 
-  // Walk-off
+  // Walk-off - home team takes the lead in bottom of 9th or later
   if (game.half === 'bottom' && game.home_score > game.away_score) {
     return true
   }
 
-  // After 9+ complete innings
-  if (game.inning >= 9 && game.half === 'top' && game.outs >= 3 && game.home_score !== game.away_score) {
+  // After 9+ complete innings when scores are different
+  // Check at the start of top of next inning (after bottom is complete)
+  if (game.inning >= 9 && game.half === 'top' && game.outs === 0 && game.home_score !== game.away_score) {
+    return true
+  }
+  
+  // After bottom of 9th+ is complete with 3 outs and away team is still ahead
+  if (game.inning >= 9 && game.half === 'bottom' && game.outs >= 3 && game.away_score > game.home_score) {
     return true
   }
 
