@@ -13,6 +13,10 @@ import { PlayerCard } from '@/components/game/PlayerCard'
 import { useAudio } from '@/hooks/useAudio'
 import type { Game, Play, Player, PlayerRating } from '@/types'
 import type { Outcome } from '@/lib/audio'
+import { getDramaContext, calculatePlayerMomentum, updateMomentum, type PlayerMomentum, type DramaContext } from '@/lib/drama'
+import { checkBattingAchievements, type Achievement } from '@/lib/achievements'
+import { DramaOverlay } from '@/components/game/DramaOverlay'
+import { AchievementToastContainer } from '@/components/game/AchievementToast'
 
 
 type GameTab = 'live' | 'boxscore' | 'plays'
@@ -31,7 +35,15 @@ export default function GamePage() {
   const [simulating, setSimulating] = useState(false)
   const [activeTab, setActiveTab] = useState<GameTab>('live')
   const [lastPlay, setLastPlay] = useState<Play | null>(null)
+
   const [error, setError] = useState<string | null>(null)
+  const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [playerMomentum, setPlayerMomentum] = useState<Map<string, PlayerMomentum>>(new Map())
+
+  // Dismiss a toast
+  const handleDismissAchievement = (id: string) => {
+    setAchievements((prev) => prev.filter((a) => a.id !== id))
+  }
 
   // Audio engine
   const { playOutcome, playDiceRoll, muted, toggleMute } = useAudio()
@@ -152,7 +164,44 @@ export default function GamePage() {
         setTimeout(() => {
           const outcome = latestPlay.result_code as Outcome
           if (outcome) playOutcome(outcome)
+
         }, 400)
+
+        // Update momentum and check achievements
+        if (latestPlay.outcome) {
+          // Update momentum
+          const batterId = latestPlay.batter_id
+          const outcome = latestPlay.result_code as Outcome // Assuming mapping needed if types differ
+
+          setPlayerMomentum(prev => {
+            const next = new Map(prev)
+            const current = next.get(batterId) || { playerId: batterId, recentOutcomes: [], state: 'neutral', emoji: '' }
+            const updated = updateMomentum(current, outcome as any)
+            next.set(batterId, updated)
+            return next
+          })
+
+          // Check achievements
+          const batter = players.get(batterId)
+          // Need rudimentary stats tracking here or rely on backend return?
+          // For now, let's just trigger based on the single play result mostly
+          // Ideally we pass full stats, but let's do a basic check
+          const playerStats = { hits: [outcome as any], homeRuns: outcome === 'HR' ? 1 : 0, rbi: latestPlay.runs_scored }
+
+          // We need full stats for some achievements, but simple ones work here
+          // In a real app we'd fetch updated stats
+          const unlocked = checkBattingAchievements(
+            batterId,
+            data.game,
+            outcome as any,
+            latestPlay.runs_scored,
+            playerStats as any // partial stats
+          )
+
+          if (unlocked.length > 0) {
+            setAchievements(prev => [...prev, ...unlocked])
+          }
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Simulation failed')
@@ -187,7 +236,12 @@ export default function GamePage() {
   const currentPitcherRating = game?.current_pitcher_id ? ratings.get(`${game.current_pitcher_id}:pitching`) : undefined
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-900 text-white relative">
+      <AchievementToastContainer
+        achievements={achievements}
+        onDismiss={handleDismissAchievement}
+      />
+      {game && <DramaOverlay game={game} playerMomentum={currentBatterId ? playerMomentum.get(currentBatterId) : undefined} />}
       {/* Header */}
       <header className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">

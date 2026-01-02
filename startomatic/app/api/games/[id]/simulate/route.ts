@@ -10,6 +10,8 @@ import {
   LEAGUE_AVERAGE_PROBS
 } from '@/lib/probabilities'
 import { advanceRunners, BaseState } from '@/lib/baserunning'
+import { getDramaContext } from '@/lib/drama'
+import { generateAnnouncerCall } from '@/lib/announcer'
 import type { Game, PlayerRating, Outcome } from '@/types'
 
 // POST /api/games/[id]/simulate - Simulate next play or full game
@@ -20,7 +22,7 @@ export async function POST(
   try {
     const { id } = await params
     const supabase = await createClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -91,7 +93,7 @@ export async function POST(
     ratings?.forEach((r: any) => ratingsMap.set(`${r.player_id}:${r.rating_type}`, r as PlayerRating))
 
     // Initialize RNG from saved state
-    const rng = game.rng_state 
+    const rng = game.rng_state
       ? SeededRng.fromState({ seed: parseInt(game.seed, 36) || 1, callCount: game.rng_state.callCount })
       : new SeededRng(game.seed)
 
@@ -155,8 +157,8 @@ export async function POST(
       await updateStandings(supabase, currentGame)
     }
 
-    return NextResponse.json({ 
-      game: currentGame, 
+    return NextResponse.json({
+      game: currentGame,
       plays: newPlays,
       completed: currentGame.status === 'completed'
     })
@@ -183,20 +185,20 @@ function simulatePlateAppearance(
   ratingsMap: Map<string, PlayerRating>,
   rng: SeededRng
 ) {
-  const batterId = game.half === 'top' 
+  const batterId = game.half === 'top'
     ? game.away_lineup[game.current_batter_idx % game.away_lineup.length]
     : game.home_lineup[game.current_batter_idx % game.home_lineup.length]
-  
+
   const pitcherId = game.current_pitcher_id!
 
   const batterRating = ratingsMap.get(`${batterId}:batting`)
   const pitcherRating = ratingsMap.get(`${pitcherId}:pitching`)
 
-  const batterProbs = batterRating 
-    ? getRatingProbabilities(batterRating) 
+  const batterProbs = batterRating
+    ? getRatingProbabilities(batterRating)
     : LEAGUE_AVERAGE_PROBS
-  const pitcherProbs = pitcherRating 
-    ? getRatingProbabilities(pitcherRating) 
+  const pitcherProbs = pitcherRating
+    ? getRatingProbabilities(pitcherRating)
     : LEAGUE_AVERAGE_PROBS
 
   const blendedProbs = blendProbabilities(batterProbs, pitcherProbs)
@@ -254,8 +256,25 @@ function applyResult(
     pitcher_probs: pitcherProbs,
     blended_probs: blendedProbs,
     dice_table_ranges: diceTableRanges,
-    explanation: generateExplanation(outcome, baseResult.runsScored, dice)
+
+    explanation: '' // Will be set below
   }
+
+  // Calculate Drama Context
+  const drama = getDramaContext(game)
+
+  // Generate Announcer Call (replaces static explanation)
+  const call = generateAnnouncerCall(
+    game,
+    outcome,
+    baseResult.runsScored,
+    drama.dramaLevel,
+    drama.isWalkOffSituation,
+    drama.isComebackPotential
+  )
+
+  // Combine play-by-play and color commentary
+  play.explanation = call.playByPlay + (call.colorCommentary ? ` ${call.colorCommentary}` : '')
 
   // Update game state
   const updatedGame = { ...game }
@@ -289,7 +308,7 @@ function applyResult(
     while (teamBox.innings.length < game.inning) {
       teamBox.innings.push(0)
     }
-    teamBox.innings[game.inning - 1] = game.half === 'top' 
+    teamBox.innings[game.inning - 1] = game.half === 'top'
       ? updatedGame.away_score - (game.away_score - baseResult.runsScored)
       : updatedGame.home_score - (game.home_score - baseResult.runsScored)
 
@@ -371,12 +390,12 @@ function updateBoxScore(
 
 function isGameOver(game: Game): boolean {
   if (game.inning < 9) return false
-  
+
   // Walk-off
   if (game.half === 'bottom' && game.home_score > game.away_score) {
     return true
   }
-  
+
   // After 9+ complete innings
   if (game.inning >= 9 && game.half === 'top' && game.outs >= 3 && game.home_score !== game.away_score) {
     return true

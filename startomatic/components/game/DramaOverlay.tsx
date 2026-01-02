@@ -18,29 +18,39 @@ interface DramaOverlayProps {
  */
 export function DramaOverlay({ game, playerMomentum }: DramaOverlayProps) {
   const drama = getDramaContext(game)
-  
+
   return (
-    <div className="space-y-3">
-      {/* Leverage Meter */}
-      <LeverageMeter 
-        leverageIndex={drama.leverageIndex} 
-        dramaLevel={drama.dramaLevel}
-      />
-      
-      {/* Crowd Energy Indicator */}
-      <CrowdEnergyIndicator crowdMood={drama.crowdMood} />
-      
+    <div className="fixed bottom-4 right-4 z-50 w-72 space-y-3 pointer-events-none">
+      <div className="pointer-events-auto">
+        {/* Leverage Meter */}
+        <LeverageMeter
+          leverageIndex={drama.leverageIndex}
+          dramaLevel={drama.dramaLevel}
+        />
+      </div>
+
+      <div className="pointer-events-auto">
+        {/* Crowd Energy Indicator */}
+        <CrowdEnergyIndicator crowdMood={drama.crowdMood} />
+      </div>
+
       {/* Player Momentum Badge */}
       {playerMomentum && playerMomentum.emoji && (
-        <MomentumBadge momentum={playerMomentum} />
+        <div className="pointer-events-auto">
+          <MomentumBadge momentum={playerMomentum} />
+        </div>
       )}
-      
+
       {/* Special Situation Indicators */}
       {drama.isWalkOffSituation && (
-        <SpecialSituationBadge text="WALK-OFF SITUATION" />
+        <div className="pointer-events-auto">
+          <SpecialSituationBadge text="WALK-OFF SITUATION" />
+        </div>
       )}
       {drama.isComebackPotential && (
-        <SpecialSituationBadge text="COMEBACK POTENTIAL" variant="secondary" />
+        <div className="pointer-events-auto">
+          <SpecialSituationBadge text="COMEBACK POTENTIAL" variant="secondary" />
+        </div>
       )}
     </div>
   )
@@ -49,38 +59,38 @@ export function DramaOverlay({ game, playerMomentum }: DramaOverlayProps) {
 /**
  * Leverage meter with color-coded levels
  */
-function LeverageMeter({ 
-  leverageIndex, 
-  dramaLevel 
-}: { 
+function LeverageMeter({
+  leverageIndex,
+  dramaLevel
+}: {
   leverageIndex: number
-  dramaLevel: DramaLevel 
+  dramaLevel: DramaLevel
 }) {
   const percentage = Math.min(100, (leverageIndex / 5) * 100)
-  
+
   const colors: Record<DramaLevel, string> = {
     routine: 'bg-gray-400',
     tense: 'bg-yellow-400',
     clutch: 'bg-orange-500',
     legendary: 'bg-red-600'
   }
-  
+
   const textColors: Record<DramaLevel, string> = {
     routine: 'text-gray-700',
     tense: 'text-yellow-700',
     clutch: 'text-orange-700',
     legendary: 'text-red-700'
   }
-  
+
   const labels: Record<DramaLevel, string> = {
     routine: 'Routine',
     tense: 'Tense',
     clutch: 'CLUTCH',
     legendary: 'LEGENDARY'
   }
-  
+
   const shouldPulse = dramaLevel === 'clutch' || dramaLevel === 'legendary'
-  
+
   return (
     <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 border-2 border-gray-200">
       <div className="flex items-center justify-between mb-2">
@@ -93,9 +103,9 @@ function LeverageMeter({
           {labels[dramaLevel]}
         </span>
       </div>
-      
+
       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div 
+        <div
           className={cn(
             'h-full transition-all duration-500',
             colors[dramaLevel],
@@ -104,7 +114,7 @@ function LeverageMeter({
           style={{ width: `${percentage}%` }}
         />
       </div>
-      
+
       <div className="mt-1 text-right text-xs text-gray-500">
         {leverageIndex.toFixed(2)}
       </div>
@@ -122,10 +132,10 @@ function CrowdEnergyIndicator({ crowdMood }: { crowdMood: CrowdMood }) {
     roaring: { emoji: '😃', label: 'Roaring', color: 'text-orange-500' },
     deafening: { emoji: '🤯', label: 'DEAFENING', color: 'text-red-600' }
   }
-  
+
   const config = moodConfig[crowdMood]
   const shouldAnimate = crowdMood === 'roaring' || crowdMood === 'deafening'
-  
+
   return (
     <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 border-2 border-gray-200">
       <div className="flex items-center justify-between">
@@ -146,25 +156,25 @@ function CrowdEnergyIndicator({ crowdMood }: { crowdMood: CrowdMood }) {
 /**
  * Player momentum badge
  */
-function MomentumBadge({ 
-  momentum 
-}: { 
-  momentum: { 
+function MomentumBadge({
+  momentum
+}: {
+  momentum: {
     playerId: string
     emoji: string
     state: 'hot' | 'cold' | 'neutral'
-  } 
+  }
 }) {
   const stateConfig = {
     hot: { label: 'HOT', color: 'bg-red-500 text-white border-red-600' },
     cold: { label: 'COLD', color: 'bg-blue-400 text-white border-blue-500' },
     neutral: { label: '', color: '' }
   }
-  
+
   if (momentum.state === 'neutral') return null
-  
+
   const config = stateConfig[momentum.state]
-  
+
   return (
     <div className={cn(
       'rounded-lg p-2 border-2',
@@ -182,17 +192,17 @@ function MomentumBadge({
 /**
  * Special situation badge
  */
-function SpecialSituationBadge({ 
-  text, 
-  variant = 'primary' 
-}: { 
+function SpecialSituationBadge({
+  text,
+  variant = 'primary'
+}: {
   text: string
-  variant?: 'primary' | 'secondary' 
+  variant?: 'primary' | 'secondary'
 }) {
   return (
     <div className={cn(
       'rounded-lg p-2 border-2 text-center animate-pulse',
-      variant === 'primary' 
+      variant === 'primary'
         ? 'bg-purple-600 text-white border-purple-700 font-bold'
         : 'bg-blue-500 text-white border-blue-600 font-semibold'
     )}>
