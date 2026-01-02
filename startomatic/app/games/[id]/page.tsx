@@ -10,7 +10,9 @@ import { PlayByPlay } from '@/components/game/PlayByPlay'
 import { BoxScore } from '@/components/game/BoxScore'
 import { DiceDisplay } from '@/components/game/DiceDisplay'
 import { PlayerCard } from '@/components/game/PlayerCard'
+import { useAudio } from '@/hooks/useAudio'
 import type { Game, Play, Player, PlayerRating } from '@/types'
+import type { Outcome } from '@/lib/audio'
 
 
 type GameTab = 'live' | 'boxscore' | 'plays'
@@ -30,6 +32,9 @@ export default function GamePage() {
   const [activeTab, setActiveTab] = useState<GameTab>('live')
   const [lastPlay, setLastPlay] = useState<Play | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Audio engine
+  const { playOutcome, playDiceRoll, muted, toggleMute } = useAudio()
 
   const fetchGame = useCallback(async () => {
     try {
@@ -138,7 +143,16 @@ export default function GamePage() {
       setPlays(prev => [...prev, ...data.plays])
 
       if (data.plays?.length > 0) {
-        setLastPlay(data.plays[data.plays.length - 1])
+        const latestPlay = data.plays[data.plays.length - 1]
+        setLastPlay(latestPlay)
+
+        // Play audio for the outcome
+        playDiceRoll()
+        // Small delay for outcome sound after dice
+        setTimeout(() => {
+          const outcome = latestPlay.result_code as Outcome
+          if (outcome) playOutcome(outcome)
+        }, 400)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Simulation failed')
@@ -181,6 +195,13 @@ export default function GamePage() {
             ⚾ Garoball
           </Link>
           <nav className="flex items-center space-x-4">
+            <button
+              onClick={toggleMute}
+              className="text-gray-300 hover:text-white text-xl"
+              title={muted ? 'Unmute' : 'Mute'}
+            >
+              {muted ? '🔇' : '🔊'}
+            </button>
             <Link href="/dashboard" className="text-gray-300 hover:text-white">
               Dashboard
             </Link>
