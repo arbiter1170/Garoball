@@ -20,7 +20,7 @@ export function DramaOverlay({ game, playerMomentum }: DramaOverlayProps) {
   const drama = getDramaContext(game)
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-48 sm:w-56 md:w-64 lg:w-72 space-y-2 sm:space-y-3 pointer-events-none">
+    <div className="fixed bottom-4 left-4 z-50 w-48 sm:w-56 md:w-64 lg:w-72 space-y-2 sm:space-y-3 pointer-events-none">
       <div className="pointer-events-auto">
         {/* Leverage Meter */}
         <LeverageMeter
@@ -69,17 +69,17 @@ function LeverageMeter({
   const percentage = Math.min(100, (leverageIndex / 5) * 100)
 
   const colors: Record<DramaLevel, string> = {
-    routine: 'bg-gray-400',
-    tense: 'bg-yellow-400',
+    routine: 'bg-gray-500',
+    tense: 'bg-yellow-500',
     clutch: 'bg-orange-500',
-    legendary: 'bg-red-600'
+    legendary: 'bg-red-500'
   }
 
   const textColors: Record<DramaLevel, string> = {
-    routine: 'text-gray-700',
-    tense: 'text-yellow-700',
-    clutch: 'text-orange-700',
-    legendary: 'text-red-700'
+    routine: 'text-gray-400',
+    tense: 'text-yellow-400',
+    clutch: 'text-orange-400',
+    legendary: 'text-red-400'
   }
 
   const labels: Record<DramaLevel, string> = {
@@ -92,9 +92,9 @@ function LeverageMeter({
   const shouldPulse = dramaLevel === 'clutch' || dramaLevel === 'legendary'
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 border-2 border-gray-200">
+    <div className="bg-gray-800/95 backdrop-blur-sm rounded-lg p-3 border border-gray-700 shadow-lg">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-gray-600">LEVERAGE</span>
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Leverage</span>
         <span className={cn(
           'text-sm font-bold',
           textColors[dramaLevel],
@@ -104,7 +104,7 @@ function LeverageMeter({
         </span>
       </div>
 
-      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
         <div
           className={cn(
             'h-full transition-all duration-500',
@@ -115,7 +115,7 @@ function LeverageMeter({
         />
       </div>
 
-      <div className="mt-1 text-right text-xs text-gray-500">
+      <div className="mt-1 text-right text-xs text-gray-500 font-mono">
         {leverageIndex.toFixed(2)}
       </div>
     </div>
@@ -127,19 +127,19 @@ function LeverageMeter({
  */
 function CrowdEnergyIndicator({ crowdMood }: { crowdMood: CrowdMood }) {
   const moodConfig: Record<CrowdMood, { emoji: string; label: string; color: string }> = {
-    quiet: { emoji: '😐', label: 'Quiet', color: 'text-gray-500' },
-    buzzing: { emoji: '🙂', label: 'Buzzing', color: 'text-blue-500' },
-    roaring: { emoji: '😃', label: 'Roaring', color: 'text-orange-500' },
-    deafening: { emoji: '🤯', label: 'DEAFENING', color: 'text-red-600' }
+    quiet: { emoji: '😐', label: 'Quiet', color: 'text-gray-400' },
+    buzzing: { emoji: '🙂', label: 'Buzzing', color: 'text-blue-400' },
+    roaring: { emoji: '😃', label: 'Roaring', color: 'text-orange-400' },
+    deafening: { emoji: '🤯', label: 'DEAFENING', color: 'text-red-400' }
   }
 
   const config = moodConfig[crowdMood]
   const shouldAnimate = crowdMood === 'roaring' || crowdMood === 'deafening'
 
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 border-2 border-gray-200">
+    <div className="bg-gray-800/95 backdrop-blur-sm rounded-lg p-3 border border-gray-700 shadow-lg">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-600">CROWD</span>
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Crowd</span>
         <div className={cn(
           'flex items-center gap-2 font-bold',
           config.color,

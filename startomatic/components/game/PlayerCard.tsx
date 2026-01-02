@@ -8,9 +8,11 @@ interface PlayerCardProps {
   diceTable?: DiceTableRanges
   mlbTeam?: string | null
   className?: string
+  teamColor?: string // Primary team color (hex)
+  teamSecondaryColor?: string // Secondary team color (hex)
 }
 
-export function PlayerCard({ player, rating, type, diceTable, mlbTeam, className = '' }: PlayerCardProps) {
+export function PlayerCard({ player, rating, type, diceTable, mlbTeam, className = '', teamColor, teamSecondaryColor }: PlayerCardProps) {
   const isBatter = type === 'batter'
   const stats = rating.stats as (BattingStats & PitchingStats) // Union for easier access
 
@@ -24,15 +26,25 @@ export function PlayerCard({ player, rating, type, diceTable, mlbTeam, className
   const era = isBatter ? 0 : (stats.era || 0)
   const k_rate = isBatter ? stats.k_pct : (stats.so / (stats.ip_outs + stats.h + stats.bb)) // Approx for pitcher
 
+  // Use team color or default dark blue
+  const headerBgColor = teamColor || '#1e3a8a'
+  const headerBorderColor = teamSecondaryColor || teamColor || '#1e3a8a'
+
   return (
-    <div className={`bg-[#f3f0e6] text-gray-900 rounded-lg overflow-hidden shadow-lg border border-gray-300 font-sans ${className}`}>
-      {/* Header */}
-      <div className="bg-[#1e3a8a] text-white p-2 px-3 flex justify-between items-center">
+    <div className={`bg-gray-800 text-white rounded-lg overflow-hidden shadow-lg border border-gray-700 font-sans ${className}`}>
+      {/* Header with team color */}
+      <div 
+        className="text-white p-2 px-3 flex justify-between items-center"
+        style={{ 
+          backgroundColor: headerBgColor,
+          borderBottom: `3px solid ${headerBorderColor}`
+        }}
+      >
         <div className="font-bold text-lg truncate">
           {player.first_name} {player.last_name}
         </div>
         <div className="text-right leading-tight">
-          <div className="text-sm font-mono opacity-80">
+          <div className="text-sm font-mono opacity-90">
             {player.primary_position || (isBatter ? 'DH' : 'P')}
           </div>
           {mlbTeam ? (
@@ -47,55 +59,55 @@ export function PlayerCard({ player, rating, type, diceTable, mlbTeam, className
           <>
             <div className="grid grid-cols-4 gap-2 text-center mb-4">
               <div>
-                <div className="text-xs text-gray-500 uppercase font-bold">PA</div>
-                <div className="font-bold text-lg">{stats.pa}</div>
+                <div className="text-xs text-gray-400 uppercase font-bold">PA</div>
+                <div className="font-bold text-lg text-white">{stats.pa}</div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 uppercase font-bold">AVG</div>
-                <div className="font-bold text-lg">{fmtAvg(stats.avg)}</div>
+                <div className="text-xs text-gray-400 uppercase font-bold">AVG</div>
+                <div className="font-bold text-lg text-white">{fmtAvg(stats.avg)}</div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 uppercase font-bold">HR</div>
-                <div className="font-bold text-lg">{stats.hr}</div>
+                <div className="text-xs text-gray-400 uppercase font-bold">HR</div>
+                <div className="font-bold text-lg text-white">{stats.hr}</div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 uppercase font-bold">K%</div>
-                <div className="font-bold text-lg">{fmtPct(stats.k_pct)}</div>
+                <div className="text-xs text-gray-400 uppercase font-bold">K%</div>
+                <div className="font-bold text-lg text-white">{fmtPct(stats.k_pct)}</div>
               </div>
             </div>
             
             <div className="grid grid-cols-4 gap-2 text-center mb-4">
               <div>
-                <div className="text-xs text-gray-500 uppercase font-bold">BABIP</div>
-                <div className="font-bold">{fmtAvg(stats.babip)}</div>
+                <div className="text-xs text-gray-400 uppercase font-bold">BABIP</div>
+                <div className="font-bold text-gray-300">{fmtAvg(stats.babip)}</div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 uppercase font-bold">OBP</div>
-                <div className="font-bold">{fmtAvg((stats.h + stats.bb) / (stats.pa || 1))}</div>
+                <div className="text-xs text-gray-400 uppercase font-bold">OBP</div>
+                <div className="font-bold text-gray-300">{fmtAvg((stats.h + stats.bb) / (stats.pa || 1))}</div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 uppercase font-bold">SLG</div>
-                <div className="font-bold">{fmtAvg(stats.slg)}</div>
+                <div className="text-xs text-gray-400 uppercase font-bold">SLG</div>
+                <div className="font-bold text-gray-300">{fmtAvg(stats.slg)}</div>
               </div>
               <div>
-                <div className="text-xs text-gray-500 uppercase font-bold">ISO</div>
-                <div className="font-bold">{fmtAvg(stats.iso)}</div>
+                <div className="text-xs text-gray-400 uppercase font-bold">ISO</div>
+                <div className="font-bold text-gray-300">{fmtAvg(stats.iso)}</div>
               </div>
             </div>
           </>
         ) : (
           <div className="grid grid-cols-3 gap-4 text-center mb-2">
             <div>
-              <div className="text-xs text-gray-500 uppercase font-bold">IP</div>
-              <div className="font-bold text-xl">{ip}</div>
+              <div className="text-xs text-gray-400 uppercase font-bold">IP</div>
+              <div className="font-bold text-xl text-white">{ip}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-500 uppercase font-bold">ERA</div>
-              <div className="font-bold text-xl">{fmtEra(era)}</div>
+              <div className="text-xs text-gray-400 uppercase font-bold">ERA</div>
+              <div className="font-bold text-xl text-white">{fmtEra(era)}</div>
             </div>
             <div>
-              <div className="text-xs text-gray-500 uppercase font-bold">K%</div>
-              <div className="font-bold text-xl">{fmtPct(rating.p_k)}</div>
+              <div className="text-xs text-gray-400 uppercase font-bold">K%</div>
+              <div className="font-bold text-xl text-white">{fmtPct(rating.p_k)}</div>
             </div>
           </div>
         )}

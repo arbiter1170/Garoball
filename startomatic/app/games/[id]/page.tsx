@@ -11,7 +11,7 @@ import { BoxScore } from '@/components/game/BoxScore'
 import { DiceDisplay } from '@/components/game/DiceDisplay'
 import { PlayerCard } from '@/components/game/PlayerCard'
 import { useAudio } from '@/hooks/useAudio'
-import type { Game, Play, Player, PlayerRating } from '@/types'
+import type { Game, Play, Player, PlayerRating, Team } from '@/types'
 import type { Outcome } from '@/lib/audio'
 import { getDramaContext, calculatePlayerMomentum, updateMomentum, type PlayerMomentum, type DramaContext } from '@/lib/drama'
 import { checkBattingAchievements, type Achievement } from '@/lib/achievements'
@@ -31,6 +31,8 @@ export default function GamePage() {
   const [ratings, setRatings] = useState<Map<string, PlayerRating>>(new Map())
   const [seasonYear, setSeasonYear] = useState<number | null>(null)
   const [mlbTeams, setMlbTeams] = useState<Map<string, string>>(new Map())
+  const [homeTeam, setHomeTeam] = useState<Team | null>(null)
+  const [awayTeam, setAwayTeam] = useState<Team | null>(null)
   const [loading, setLoading] = useState(true)
   const [simulating, setSimulating] = useState(false)
   const [activeTab, setActiveTab] = useState<GameTab>('live')
@@ -58,6 +60,14 @@ export default function GamePage() {
       setGame(data.game)
       setPlays(data.plays || [])
       setSeasonYear(typeof data.season_year === 'number' ? data.season_year : null)
+
+      // Extract team data from game
+      if (data.game?.home_team) {
+        setHomeTeam(data.game.home_team)
+      }
+      if (data.game?.away_team) {
+        setAwayTeam(data.game.away_team)
+      }
 
       // Build player map
       const playerMap = new Map<string, Player>()
@@ -294,6 +304,8 @@ export default function GamePage() {
                   rating={currentBatterRating}
                   type="batter"
                   mlbTeam={mlbTeams.get(currentBatter.id) || null}
+                  teamColor={(game.half === 'top' ? awayTeam : homeTeam)?.primary_color}
+                  teamSecondaryColor={(game.half === 'top' ? awayTeam : homeTeam)?.secondary_color}
                 />
               ) : (
                 <div className="bg-gray-800 rounded-lg p-6 text-center text-gray-400">
@@ -312,6 +324,8 @@ export default function GamePage() {
                   rating={currentPitcherRating}
                   type="pitcher"
                   mlbTeam={mlbTeams.get(currentPitcher.id) || null}
+                  teamColor={(game.half === 'top' ? homeTeam : awayTeam)?.primary_color}
+                  teamSecondaryColor={(game.half === 'top' ? homeTeam : awayTeam)?.secondary_color}
                   className="w-full max-w-sm"
                 />
               ) : (
