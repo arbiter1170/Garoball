@@ -39,7 +39,7 @@ const DICE_TABLE_SIZE = 16
 // 3d6 probability distribution - each index represents (sum - 3)
 // Sum 3 = index 0, Sum 18 = index 15
 // Values are the probability of rolling exactly that sum (out of 216 total combinations)
-const DICE_3D6_PROBABILITIES: number[] = [
+export export const DICE_3D6_PROBABILITIES: number[] = [
   1/216,   // Sum 3:  1 way   = 0.463%
   3/216,   // Sum 4:  3 ways  = 1.389%
   6/216,   // Sum 5:  6 ways  = 2.778%
