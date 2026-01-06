@@ -36,6 +36,48 @@ export function getOutcomeFromProbability(
 // Total slots in dice table (3d6 = 16 possible outcomes: 3-18)
 const DICE_TABLE_SIZE = 16
 
+// 3d6 probability distribution - each index represents (sum - 3)
+// Sum 3 = index 0, Sum 18 = index 15
+// Values are the probability of rolling exactly that sum (out of 216 total combinations)
+const DICE_3D6_PROBABILITIES: number[] = [
+  1/216,   // Sum 3:  1 way   = 0.463%
+  3/216,   // Sum 4:  3 ways  = 1.389%
+  6/216,   // Sum 5:  6 ways  = 2.778%
+  10/216,  // Sum 6:  10 ways = 4.630%
+  15/216,  // Sum 7:  15 ways = 6.944%
+  21/216,  // Sum 8:  21 ways = 9.722%
+  25/216,  // Sum 9:  25 ways = 11.574%
+  27/216,  // Sum 10: 27 ways = 12.500%
+  27/216,  // Sum 11: 27 ways = 12.500%
+  25/216,  // Sum 12: 25 ways = 11.574%
+  21/216,  // Sum 13: 21 ways = 9.722%
+  15/216,  // Sum 14: 15 ways = 6.944%
+  10/216,  // Sum 15: 10 ways = 4.630%
+  6/216,   // Sum 16: 6 ways  = 2.778%
+  3/216,   // Sum 17: 3 ways  = 1.389%
+  1/216,   // Sum 18: 1 way   = 0.463%
+]
+
+// Cumulative probabilities for 3d6 (probability of rolling <= sum)
+// Used to convert dice roll to a uniform probability for outcome selection
+const DICE_3D6_CUMULATIVE: number[] = (() => {
+  const cumulative: number[] = []
+  let sum = 0
+  for (const prob of DICE_3D6_PROBABILITIES) {
+    sum += prob
+    cumulative.push(sum)
+  }
+  return cumulative
+})()
+
+// Convert a dice index (0-15, where 0 = sum of 3) to a cumulative probability (0-1)
+// This allows us to map the non-uniform 3d6 distribution to uniform probability space
+export function diceIndexToCumulativeProbability(diceIndex: number): number {
+  // Return the cumulative probability at the END of this dice sum's range
+  // This ensures proper outcome distribution when compared against cumulative thresholds
+  return DICE_3D6_CUMULATIVE[diceIndex]
+}
+
 // League average probabilities (used as baseline and for missing data)
 export const LEAGUE_AVERAGE_PROBS: OutcomeProbabilities = {
   K: 0.220,    // ~22% strikeout rate
@@ -95,39 +137,111 @@ export function blendProbabilities(
   })
 }
 
-// Convert probabilities to dice table ranges
-// Returns the ranges for each outcome in the 0-15 dice index space
-export function probabilitiesToDiceRanges(probs: OutcomeProbabilities): DiceTableRanges {
+// Build an optimal dice table that accounts for 3d6 probability distribution
+// Uses greedy allocation: assign each dice sum to the outcome that needs probability most
+// Ensures every outcome with non-zero probability gets at least one dice sum
+function buildOptimalDiceTable(probs: OutcomeProbabilities): Outcome[] {
   const normalized = normalizeProbabilities(probs)
   const outcomes: Outcome[] = ['K', 'BB', 'OUT', '1B', '2B', '3B', 'HR']
-  const ranges: Partial<DiceTableRanges> = {}
-
-  let currentStart = 0
-
-  for (const outcome of outcomes) {
-    const slots = Math.round(normalized[outcome] * DICE_TABLE_SIZE)
-    const end = Math.min(currentStart + Math.max(slots - 1, 0), DICE_TABLE_SIZE - 1)
-
-    ranges[outcome] = [currentStart, end]
-    currentStart = end + 1
-
-    // Ensure we don't overflow
-    if (currentStart >= DICE_TABLE_SIZE) {
-      currentStart = DICE_TABLE_SIZE - 1
+  
+  // Track how much probability each outcome still needs
+  const remaining: Record<Outcome, number> = { ...normalized } as Record<Outcome, number>
+  
+  // Result table: index = dice sum - 3
+  const table: Outcome[] = new Array(16).fill(null)
+  const assigned = new Set<number>()
+  
+  // First pass: ensure each outcome with >0 probability gets at least one dice sum
+  // Assign the rarest dice sums (3 and 18) to rarest outcomes for thematic feel
+  const rareOutcomes = outcomes.filter(o => normalized[o] > 0 && normalized[o] < 0.05)
+  const rareDiceIndices = [15, 0, 14, 1] // sums 18, 3, 17, 4 (rarest)
+  
+  for (let i = 0; i < rareOutcomes.length && i < rareDiceIndices.length; i++) {
+    const outcome = rareOutcomes[i]
+    const diceIdx = rareDiceIndices[i]
+    if (!assigned.has(diceIdx)) {
+      table[diceIdx] = outcome
+      assigned.add(diceIdx)
+      remaining[outcome] -= DICE_3D6_PROBABILITIES[diceIdx]
     }
   }
+  
+  // Sort remaining dice indices by their probability (highest first for better allocation)
+  const remainingIndices = Array.from({ length: 16 }, (_, i) => i)
+    .filter(i => !assigned.has(i))
+    .sort((a, b) => DICE_3D6_PROBABILITIES[b] - DICE_3D6_PROBABILITIES[a])
+  
+  // Greedy allocation: assign each dice sum to outcome with most remaining need
+  for (const diceIndex of remainingIndices) {
+    const diceProb = DICE_3D6_PROBABILITIES[diceIndex]
+    
+    // Find outcome with largest remaining probability need
+    let bestOutcome: Outcome = 'OUT'
+    let bestNeed = -Infinity
+    
+    for (const outcome of outcomes) {
+      const need = remaining[outcome]
+      if (need > bestNeed) {
+        bestNeed = need
+        bestOutcome = outcome
+      }
+    }
+    
+    // Assign this dice sum to the best outcome
+    table[diceIndex] = bestOutcome
+    remaining[bestOutcome] -= diceProb
+  }
+  
+  return table
+}
 
-  // Make sure the last outcome reaches the end
-  ranges.HR = [ranges.HR![0], DICE_TABLE_SIZE - 1]
+// Convert probabilities to dice table ranges (for display/UI)
+// Returns the ranges for each outcome in the 0-15 dice index space
+export function probabilitiesToDiceRanges(probs: OutcomeProbabilities): DiceTableRanges {
+  const table = buildOptimalDiceTable(probs)
+  
+  // Convert table array to ranges format
+  const ranges: Partial<DiceTableRanges> = {
+    K: [Infinity, -Infinity],
+    BB: [Infinity, -Infinity],
+    OUT: [Infinity, -Infinity],
+    '1B': [Infinity, -Infinity],
+    '2B': [Infinity, -Infinity],
+    '3B': [Infinity, -Infinity],
+    HR: [Infinity, -Infinity],
+  }
+  
+  for (let i = 0; i < 16; i++) {
+    const outcome = table[i]
+    const [min, max] = ranges[outcome]!
+    ranges[outcome] = [Math.min(min, i), Math.max(max, i)]
+  }
+  
+  // Clean up any outcomes that weren't assigned (set to empty range)
+  const outcomes: Outcome[] = ['K', 'BB', 'OUT', '1B', '2B', '3B', 'HR']
+  for (const outcome of outcomes) {
+    if (ranges[outcome]![0] === Infinity) {
+      ranges[outcome] = [0, -1] // Empty range
+    }
+  }
 
   return ranges as DiceTableRanges
 }
 
-// Determine outcome from dice index using ranges
+// Determine outcome from dice index using the optimized dice table
+// This accounts for the non-uniform 3d6 distribution by pre-computing optimal assignments
 export function getOutcomeFromDiceIndex(
   diceIndex: number,
-  ranges: DiceTableRanges
+  ranges: DiceTableRanges,
+  probs?: OutcomeProbabilities
 ): Outcome {
+  // If probabilities provided, build optimal table that accounts for 3d6 distribution
+  if (probs) {
+    const table = buildOptimalDiceTable(probs)
+    return table[diceIndex] || 'OUT'
+  }
+  
+  // Fallback to range-based lookup (for backward compatibility with stored dice tables)
   const outcomes: Outcome[] = ['K', 'BB', 'OUT', '1B', '2B', '3B', 'HR']
 
   for (const outcome of outcomes) {

@@ -20,7 +20,6 @@ import {
   blendProbabilities,
   probabilitiesToDiceRanges,
   getOutcomeFromDiceIndex,
-  getOutcomeFromProbability,
   LEAGUE_AVERAGE_PROBS
 } from './probabilities'
 import { advanceRunners, BaseState } from './baserunning'
@@ -159,14 +158,13 @@ export function simulatePlateAppearance(
   // Blend 50/50
   const blendedProbs = blendProbabilities(batterProbs, pitcherProbs)
 
-  // Roll dice (visual only)
-  const { dice, index } = rng.rollDiceIndex()
-
-  // Get outcome based on precise probability
-  const randomValue = rng.random()
-  const outcome = getOutcomeFromProbability(randomValue, blendedProbs)
-
+  // Calculate dice table ranges from blended probabilities (for display)
   const diceTableRanges = probabilitiesToDiceRanges(blendedProbs)
+
+  // Roll dice - these determine the outcome (Strat-O-Matic style)
+  // The outcome is probability-weighted to account for the 3d6 bell curve distribution
+  const { dice, index } = rng.rollDiceIndex()
+  const outcome = getOutcomeFromDiceIndex(index, diceTableRanges, blendedProbs)
 
   // Calculate runs scored
   const baseState: BaseState = {
@@ -247,6 +245,14 @@ export function applyPlateAppearance(
     updatedGame.home_score += result.runsScored
   }
 
+  // Credit individual runners who scored with their run
+  const battingTeamBox = game.half === 'top' ? updatedGame.box_score.away : updatedGame.box_score.home
+  for (const runnerId of baseResult.runnersScored) {
+    if (battingTeamBox.batting[runnerId]) {
+      battingTeamBox.batting[runnerId].r += 1
+    }
+  }
+
   // Update outs
   if (result.outcome === 'K' || result.outcome === 'OUT') {
     updatedGame.outs += 1
@@ -268,7 +274,7 @@ export function applyPlateAppearance(
     updatedGame.runner_1b = null
     updatedGame.runner_2b = null
     updatedGame.runner_3b = null
-    updatedGame.current_batter_idx = 0
+    // Note: current_batter_idx is NOT reset - lineup persists across innings
 
     // Record inning runs in box score
     const teamBox = game.half === 'top' ? updatedGame.box_score.away : updatedGame.box_score.home
