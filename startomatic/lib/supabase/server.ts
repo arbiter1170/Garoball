@@ -5,7 +5,8 @@ import { createMockClient, isMockMode } from './mock'
 
 export async function createClient() {
   if (isMockMode()) {
-    return createMockClient() as ReturnType<typeof createServerClient>
+    // Cast through unknown for mock client compatibility with stricter Supabase types
+    return createMockClient() as unknown as ReturnType<typeof createServerClient>
   }
 
   const cookieStore = await cookies()

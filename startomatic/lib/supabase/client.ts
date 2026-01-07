@@ -4,7 +4,8 @@ import { createMockClient, isMockMode } from './mock'
 
 export function createClient() {
   if (isMockMode()) {
-    return createMockClient() as ReturnType<typeof createBrowserClient>
+    // Cast through unknown for mock client compatibility with stricter Supabase types
+    return createMockClient() as unknown as ReturnType<typeof createBrowserClient>
   }
 
   return createBrowserClient(

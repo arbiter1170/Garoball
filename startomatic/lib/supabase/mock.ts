@@ -569,15 +569,15 @@ export function createMockClient() {
                 case 'standings':
                     // Simple mock for standings
                     return {
-                        select: () => new MockQueryBuilder([]),
-                        insert: (item: unknown) => new MockInsertBuilder([], item as Record<string, unknown>),
-                        update: (updates: unknown) => new MockUpdateBuilder([], updates as Record<string, unknown>)
+                        select: () => new MockQueryBuilder<Record<string, unknown>>([]),
+                        insert: (item: unknown) => new MockInsertBuilder<Record<string, unknown>>([], item as Record<string, unknown>),
+                        update: (updates: unknown) => new MockUpdateBuilder<Record<string, unknown>>([], updates as Record<string, unknown>)
                     }
                 default:
                     return {
-                        select: () => new MockQueryBuilder([]),
-                        insert: () => new MockInsertBuilder([], {}),
-                        update: () => new MockUpdateBuilder([], {})
+                        select: () => new MockQueryBuilder<Record<string, unknown>>([]),
+                        insert: () => new MockInsertBuilder<Record<string, unknown>>([], {}),
+                        update: () => new MockUpdateBuilder<Record<string, unknown>>([], {})
                     }
             }
         },
