@@ -12,7 +12,8 @@ import type {
   BoxScore,
   TeamBoxScore,
   PlayerBattingLine,
-  PlayerPitchingLine
+  PlayerPitchingLine,
+  Player
 } from '@/types'
 import { SeededRng, generateSeed } from './rng'
 import {
@@ -23,12 +24,16 @@ import {
   LEAGUE_AVERAGE_PROBS
 } from './probabilities'
 import { advanceRunners, BaseState } from './baserunning'
+import { calculateMatchupProbabilities } from './handedness'
 
 export interface SimulationContext {
   game: Game
   homeRatings: Map<string, PlayerRating>
   awayRatings: Map<string, PlayerRating>
+  homePlayers?: Map<string, Player>
+  awayPlayers?: Map<string, Player>
   rng: SeededRng
+  useHandednessMatchups?: boolean
 }
 
 export interface PlateAppearanceResult {
@@ -135,7 +140,7 @@ export function getCurrentPitcher(game: Game): string {
 export function simulatePlateAppearance(
   ctx: SimulationContext
 ): PlateAppearanceResult {
-  const { game, rng } = ctx
+  const { game, rng, useHandednessMatchups = false } = ctx
 
   const batterId = getCurrentBatter(game)
   const pitcherId = getCurrentPitcher(game)
@@ -155,8 +160,32 @@ export function simulatePlateAppearance(
     ? getRatingProbabilities(pitcherRating)
     : LEAGUE_AVERAGE_PROBS
 
-  // Blend 50/50
-  const blendedProbs = blendProbabilities(batterProbs, pitcherProbs)
+  // Blend with handedness awareness if enabled and player data available
+  let blendedProbs: OutcomeProbabilities
+  if (useHandednessMatchups && ctx.homePlayers && ctx.awayPlayers) {
+    const players = game.half === 'top' ? ctx.awayPlayers : ctx.homePlayers
+    const pitcherPlayers = game.half === 'top' ? ctx.homePlayers : ctx.awayPlayers
+    
+    const batter = players.get(batterId)
+    const pitcher = pitcherPlayers.get(pitcherId)
+    
+    if (batter?.bats && pitcher?.throws) {
+      // Use handedness-aware calculation
+      blendedProbs = calculateMatchupProbabilities(
+        batterProbs,
+        pitcherProbs,
+        batter.bats,
+        pitcher.throws,
+        0.65 // Batter weight
+      )
+    } else {
+      // Fall back to standard blend
+      blendedProbs = blendProbabilities(batterProbs, pitcherProbs)
+    }
+  } else {
+    // Standard blend (backward compatible)
+    blendedProbs = blendProbabilities(batterProbs, pitcherProbs)
+  }
 
   // Calculate dice table ranges from blended probabilities (for display)
   const diceTableRanges = probabilitiesToDiceRanges(blendedProbs)
