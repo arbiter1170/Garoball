@@ -1,5 +1,0 @@
-{
-  "installCommand": "cd startomatic && npm install",
-  "buildCommand": "cd startomatic && npm run build",
-  "framework": "nextjs"
-}
