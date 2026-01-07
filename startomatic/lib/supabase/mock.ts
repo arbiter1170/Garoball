@@ -66,6 +66,14 @@ export const MOCK_LEAGUES = [
     }
 ]
 
+function getTeamsWithRelations() {
+    return MOCK_TEAMS.map(team => ({
+        ...team,
+        league: MOCK_LEAGUES.find(league => league.id === team.league_id) || null,
+        owner: MOCK_PROFILE
+    }))
+}
+
 // Generate mock season
 export const MOCK_SEASONS = [
     {
@@ -519,7 +527,7 @@ export function createMockClient() {
                     }
                 case 'teams':
                     return {
-                        select: () => new MockQueryBuilder(MOCK_TEAMS),
+                        select: () => new MockQueryBuilder(getTeamsWithRelations()),
                         insert: (item: unknown) => new MockInsertBuilder(MOCK_TEAMS, item as Partial<typeof MOCK_TEAMS[0]>),
                         update: (updates: unknown) => new MockUpdateBuilder(MOCK_TEAMS, updates as Partial<typeof MOCK_TEAMS[0]>)
                     }

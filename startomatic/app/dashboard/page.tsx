@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { isMockMode } from '@/lib/supabase/mock'
 import { Button } from '@/components/ui/Button'
 
 export default async function DashboardPage() {
@@ -53,6 +54,8 @@ export default async function DashboardPage() {
     recentGames = games || []
   }
 
+  const latestGame = recentGames[0] as { id: string } | undefined
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
@@ -82,12 +85,26 @@ export default async function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
+        {isMockMode() && (
+          <div className="bg-blue-900/40 border border-blue-700 rounded-lg p-4 mb-8 text-blue-100">
+            <div className="font-semibold">Demo Mode</div>
+            <p className="text-sm text-blue-200 mt-1">
+              You&apos;re signed in as a demo user. Open a game to start simulating or browse your sample teams below.
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
           <div className="lg:col-span-1">
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
               <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
               <div className="space-y-3">
+                {latestGame && (
+                  <Link href={`/games/${latestGame.id}`} className="block">
+                    <Button className="w-full">Play Latest Game</Button>
+                  </Link>
+                )}
                 <Link href="/leagues/new" className="block">
                   <Button className="w-full">Create New League</Button>
                 </Link>
