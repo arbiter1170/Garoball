@@ -108,4 +108,65 @@ Middleware protects `/dashboard`, `/leagues`, `/games`:
 | `lib/probabilities.ts` | Outcome calculations |
 | `lib/supabase/mock.ts` | Mock mode for dev |
 | `app/dashboard/page.tsx` | Main dashboard UI |
+| `app/games/[id]/page.tsx` | Main game view (demo focus) |
 | `scripts/seed.ts` | Database seeding |
+
+---
+
+## Current State (January 2026)
+
+**Test Status:** 87/87 passing  
+**Demo Status:** Functional, needs polish
+
+### What's Working
+- ✅ Core 3d6 simulation engine
+- ✅ Batter/pitcher probability blending (50/50)
+- ✅ Deterministic RNG (reproducible games)
+- ✅ Baserunning (all 7 outcomes)
+- ✅ Box score tracking
+- ✅ Walk-off & extra innings
+- ✅ Drama/leverage system
+- ✅ Mock mode for dev
+
+### Known Gaps
+
+**UI Polish Needed:**
+| Issue | Priority | File(s) |
+|-------|----------|---------|
+| Mobile responsive | HIGH | `app/games/[id]/page.tsx` |
+| Dice roll animation | MEDIUM | `components/game/DiceDisplay.tsx` |
+| Typography (custom font) | MEDIUM | `tailwind.config.ts`, `globals.css` |
+| Player card design | MEDIUM | `components/game/PlayerCard.tsx` |
+| Game completion banner | LOW | `app/games/[id]/page.tsx` |
+
+**Functional Gaps (Deferred):**
+| Gap | Status | Notes |
+|-----|--------|-------|
+| Handedness matchups | Not implemented | `Player.bats/throws` exist but unused |
+| NPC pitching manager | Not implemented | Needs handedness first |
+| Double plays (GIDP) | Not implemented | Phase 3 |
+| Stolen bases | Not implemented | Needs speed ratings |
+
+---
+
+## Issue #5: Handedness-Aware Matchups
+
+**Problem:** The simulation ignores batter/pitcher handedness.
+
+**Current Code:**
+- `Player.bats: 'L' | 'R' | 'S'` exists in types
+- `Player.throws: 'L' | 'R' | 'S'` exists in types
+- `blendProbabilities()` uses flat 50/50 blend
+
+**Proposed Solution:**
+1. Add platoon adjustment to `blendProbabilities()`
+   - LHP vs LHB: pitcher advantage (+X% K, -X% H)
+   - LHP vs RHB: batter advantage (-X% K, +X% H)
+   - Switch hitters use favorable side
+2. Create NPC pitching manager to suggest optimal matchups
+3. Display handedness on player cards
+
+**Files to Modify:**
+- `lib/probabilities.ts` - Add `getPlatoonAdjustment()`
+- `lib/simulation.ts` - Pass handedness to blend
+- `components/game/PlayerCard.tsx` - Show L/R/S indicator

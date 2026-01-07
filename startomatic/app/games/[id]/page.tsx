@@ -295,7 +295,73 @@ export default function GamePage() {
 
         {/* Live View Tab */}
         {activeTab === 'live' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
+            {/* Mobile: Simulation Controls First (always visible at top on mobile) */}
+            <div className="lg:hidden">
+              {game.status !== 'completed' ? (
+                <div className="flex justify-center space-x-2 mb-2">
+                  <Button
+                    onClick={() => simulatePlay('play')}
+                    disabled={simulating}
+                    className="flex-1"
+                  >
+                    {simulating ? 'Simulating...' : 'Next At-Bat'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => simulatePlay('inning')}
+                    disabled={simulating}
+                    className="text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white px-3"
+                  >
+                    Sim Inning
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => simulatePlay('game')}
+                    disabled={simulating}
+                    className="text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white px-3"
+                  >
+                    Sim Game
+                  </Button>
+                </div>
+              ) : (
+                <div className="bg-green-600 rounded-lg p-3 text-center mb-2">
+                  <div className="text-lg font-bold text-white">🏆 Game Over!</div>
+                  <div className="text-sm text-green-100">
+                    Final: {awayTeam?.abbreviation || 'AWAY'} {game.away_score} - {homeTeam?.abbreviation || 'HOME'} {game.home_score}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile: Diamond + Current State (compact view) */}
+            <div className="lg:hidden bg-gray-800 rounded-lg p-3 border border-gray-700">
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0">
+                  <DiamondView
+                    runner1b={game.runner_1b}
+                    runner2b={game.runner_2b}
+                    runner3b={game.runner_3b}
+                    outs={game.outs}
+                    players={players}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm text-gray-400 mb-1">
+                    {game.half === 'top' ? 'Top' : 'Bottom'} {game.inning} · {game.outs} out{game.outs !== 1 ? 's' : ''}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {currentBatter?.first_name} {currentBatter?.last_name} at bat
+                  </div>
+                  {lastPlay && (
+                    <div className="text-xs text-gray-400 mt-1 truncate">
+                      Last: {lastPlay.explanation}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Left: Batter Card */}
             <div className="lg:col-span-3">
               {currentBatter && currentBatterRating ? (
@@ -315,7 +381,7 @@ export default function GamePage() {
             </div>
 
             {/* Center: Dice Tray + Pitcher Card */}
-            <div className="lg:col-span-5 flex flex-col items-center space-y-6">
+            <div className="lg:col-span-5 flex flex-col items-center space-y-4 lg:space-y-6">
               <DiceDisplay values={lastPlay?.dice_values || [1, 1, 1]} />
 
               {currentPitcher && currentPitcherRating ? (
@@ -334,36 +400,46 @@ export default function GamePage() {
                 </div>
               )}
 
-              {/* Simulation Controls */}
-              {game.status !== 'completed' && (
-                <div className="flex justify-center space-x-3 w-full">
-                  <Button
-                    onClick={() => simulatePlay('play')}
-                    disabled={simulating}
-                    className="flex-1"
-                  >
-                    {simulating ? 'Simulating...' : 'Next At-Bat'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => simulatePlay('inning')}
-                    disabled={simulating}
-                    className="text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white"
-                  >
-                    Sim Inning
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => simulatePlay('game')}
-                    disabled={simulating}
-                    className="text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white"
-                  >
-                    Sim Game
-                  </Button>
-                </div>
-              )}
+              {/* Desktop: Simulation Controls */}
+              <div className="hidden lg:flex justify-center space-x-3 w-full">
+                {game.status !== 'completed' ? (
+                  <>
+                    <Button
+                      onClick={() => simulatePlay('play')}
+                      disabled={simulating}
+                      className="flex-1"
+                    >
+                      {simulating ? 'Simulating...' : 'Next At-Bat'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => simulatePlay('inning')}
+                      disabled={simulating}
+                      className="text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white"
+                    >
+                      Sim Inning
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => simulatePlay('game')}
+                      disabled={simulating}
+                      className="text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white"
+                    >
+                      Sim Game
+                    </Button>
+                  </>
+                ) : (
+                  <div className="bg-green-600 rounded-lg p-4 text-center w-full">
+                    <div className="text-xl font-bold text-white">🏆 Game Over!</div>
+                    <div className="text-sm text-green-100 mt-1">
+                      Final: {awayTeam?.abbreviation || 'AWAY'} {game.away_score} - {homeTeam?.abbreviation || 'HOME'} {game.home_score}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700 w-full">
+              {/* How to Play - Hidden on mobile */}
+              <div className="hidden lg:block bg-gray-800 rounded-lg p-4 border border-gray-700 w-full">
                 <h3 className="text-sm font-bold text-gray-300 mb-2 uppercase">How to Play</h3>
                 <div className="text-sm text-gray-400 space-y-1">
                   <div>1) Click <span className="text-gray-200">Next At-Bat</span> to roll dice and resolve a plate appearance.</div>
@@ -374,8 +450,8 @@ export default function GamePage() {
               </div>
             </div>
 
-            {/* Right: Diamond + Play-by-Play */}
-            <div className="lg:col-span-4 space-y-4">
+            {/* Right: Diamond + Play-by-Play (Desktop only) */}
+            <div className="hidden lg:block lg:col-span-4 space-y-4">
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                 <div className="flex justify-between items-center mb-2 text-sm text-gray-400">
                   <span>
@@ -415,6 +491,26 @@ export default function GamePage() {
                   <div className="text-gray-500 text-center py-4">No plays yet</div>
                 )}
               </div>
+            </div>
+
+            {/* Mobile: Compact Play-by-Play */}
+            <div className="lg:hidden bg-gray-800 rounded-lg p-3 border border-gray-700 max-h-40 overflow-y-auto">
+              <h3 className="text-xs font-bold text-gray-400 mb-2 uppercase">Recent Plays</h3>
+              {plays.length > 0 ? (
+                <div className="space-y-2">
+                  {[...plays].reverse().slice(0, 3).map((play, idx) => {
+                    const batter = players.get(play.batter_id)
+                    return (
+                      <div key={play.id || idx} className="text-xs border-b border-gray-700 pb-1 last:border-0">
+                        <span className="text-gray-400">{batter?.last_name}:</span>{' '}
+                        <span className="text-gray-300">{play.explanation}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="text-gray-500 text-center text-xs py-2">No plays yet</div>
+              )}
             </div>
           </div>
         )}

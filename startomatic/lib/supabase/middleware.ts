@@ -1,7 +1,11 @@
 // Supabase middleware helper for session management
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { isMockMode, MOCK_USER } from './mock'
+
+// Inline mock mode check to avoid edge runtime compatibility issues
+function isMockMode(): boolean {
+  return process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+}
 
 export async function updateSession(request: NextRequest) {
   // In mock mode, skip Supabase auth and treat user as logged in

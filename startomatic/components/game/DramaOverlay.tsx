@@ -20,7 +20,7 @@ export function DramaOverlay({ game, playerMomentum }: DramaOverlayProps) {
   const drama = getDramaContext(game)
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 w-48 sm:w-56 md:w-64 lg:w-72 space-y-2 sm:space-y-3 pointer-events-none">
+    <div className="fixed bottom-4 left-4 z-50 w-48 sm:w-56 md:w-64 lg:w-72 space-y-2 sm:space-y-3 pointer-events-none hidden md:block">
       <div className="pointer-events-auto">
         {/* Leverage Meter */}
         <LeverageMeter
