@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "builds": [
+    {
+      "src": "startomatic/package.json",
+      "use": "@vercel/next"
+    }
+  ]
+}
+
