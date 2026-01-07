@@ -1,11 +1,6 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
-  "builds": [
-    {
-      "src": "startomatic/package.json",
-      "use": "@vercel/next"
-    }
-  ]
+  "buildCommand": "cd startomatic && npm run build",
+  "installCommand": "cd startomatic && npm install",
+  "outputDirectory": "startomatic/.next",
+  "framework": "nextjs"
 }
-
