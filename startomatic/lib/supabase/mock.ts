@@ -96,16 +96,13 @@ function createEmptyPitchingLine(): PlayerPitchingLine {
 }
 
 // Create team lineups from mock players
-// Using the same player pool for both teams - this is intentional for mock simplicity
-// In a real app with a database, each team would have unique players
-// Note: Both teams using same player IDs works fine because:
-// 1. Box scores track stats separately (batting[playerId] per team)
-// 2. The simulation only needs player IDs to look up ratings
+// Team 1 (NYY/Home): Uses players 1-9 (batters) and player-19 (Jacob Miller, SP)
+// Team 2 (BOS/Away): Uses players 10-18 (batters) and player-25 (Sergio Alvarez, SP)
 const TEAM1_LINEUP = ['player-1', 'player-2', 'player-3', 'player-4', 'player-5', 'player-6', 'player-7', 'player-8', 'player-9']
-const TEAM2_LINEUP = ['player-1', 'player-2', 'player-3', 'player-4', 'player-5', 'player-6', 'player-7', 'player-8', 'player-9']
-// Pitchers are players 10-12 (SP) and 13-16 (RP/CL)
-const TEAM1_PITCHERS = ['player-10']
-const TEAM2_PITCHERS = ['player-11']
+const TEAM2_LINEUP = ['player-10', 'player-11', 'player-12', 'player-13', 'player-14', 'player-15', 'player-16', 'player-17', 'player-18']
+// Pitchers: players 19-24 are original pitchers, 25-28 are new ones
+const TEAM1_PITCHERS = ['player-19']  // Jacob Miller (SP)
+const TEAM2_PITCHERS = ['player-25']  // Sergio Alvarez (SP)
 
 // Create box score batting records for a lineup
 function createBattingRecords(lineup: string[]): Record<string, PlayerBattingLine> {

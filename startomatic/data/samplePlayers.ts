@@ -210,7 +210,216 @@ export const samplePlayers = [
     }
   },
   
-  // Sample Pitchers
+  // === TEAM 2 BATTERS (players 10-18 for second team) ===
+  {
+    first_name: 'Marcus',
+    last_name: 'Chen',
+    bats: 'R',
+    throws: 'R',
+    primary_position: 'CF',
+    batting_stats: {
+      pa: 630,
+      ab: 560,
+      h: 165,
+      '2b': 32,
+      '3b': 6,
+      hr: 24,
+      bb: 55,
+      so: 115,
+      avg: 0.295,
+      slg: 0.495,
+      iso: 0.200,
+      babip: 0.325,
+      k_pct: 0.183,
+      bb_pct: 0.087
+    }
+  },
+  {
+    first_name: 'Anthony',
+    last_name: 'Reyes',
+    bats: 'L',
+    throws: 'R',
+    primary_position: '1B',
+    batting_stats: {
+      pa: 600,
+      ab: 520,
+      h: 150,
+      '2b': 38,
+      '3b': 1,
+      hr: 38,
+      bb: 65,
+      so: 145,
+      avg: 0.288,
+      slg: 0.575,
+      iso: 0.287,
+      babip: 0.310,
+      k_pct: 0.242,
+      bb_pct: 0.108
+    }
+  },
+  {
+    first_name: 'Derek',
+    last_name: 'Simmons',
+    bats: 'R',
+    throws: 'R',
+    primary_position: 'SS',
+    batting_stats: {
+      pa: 660,
+      ab: 590,
+      h: 162,
+      '2b': 30,
+      '3b': 5,
+      hr: 20,
+      bb: 55,
+      so: 105,
+      avg: 0.275,
+      slg: 0.450,
+      iso: 0.175,
+      babip: 0.295,
+      k_pct: 0.159,
+      bb_pct: 0.083
+    }
+  },
+  {
+    first_name: 'Jamal',
+    last_name: 'Patterson',
+    bats: 'S',
+    throws: 'R',
+    primary_position: '3B',
+    batting_stats: {
+      pa: 580,
+      ab: 510,
+      h: 140,
+      '2b': 28,
+      '3b': 2,
+      hr: 32,
+      bb: 55,
+      so: 135,
+      avg: 0.275,
+      slg: 0.520,
+      iso: 0.245,
+      babip: 0.285,
+      k_pct: 0.233,
+      bb_pct: 0.095
+    }
+  },
+  {
+    first_name: 'Tommy',
+    last_name: 'Nakamura',
+    bats: 'L',
+    throws: 'L',
+    primary_position: 'RF',
+    batting_stats: {
+      pa: 540,
+      ab: 470,
+      h: 125,
+      '2b': 24,
+      '3b': 3,
+      hr: 20,
+      bb: 55,
+      so: 100,
+      avg: 0.266,
+      slg: 0.460,
+      iso: 0.194,
+      babip: 0.290,
+      k_pct: 0.185,
+      bb_pct: 0.102
+    }
+  },
+  {
+    first_name: 'Victor',
+    last_name: 'Gutierrez',
+    bats: 'R',
+    throws: 'R',
+    primary_position: 'C',
+    batting_stats: {
+      pa: 460,
+      ab: 410,
+      h: 100,
+      '2b': 20,
+      '3b': 1,
+      hr: 15,
+      bb: 40,
+      so: 90,
+      avg: 0.244,
+      slg: 0.400,
+      iso: 0.156,
+      babip: 0.270,
+      k_pct: 0.196,
+      bb_pct: 0.087
+    }
+  },
+  {
+    first_name: 'Isaiah',
+    last_name: 'Washington',
+    bats: 'L',
+    throws: 'L',
+    primary_position: 'LF',
+    batting_stats: {
+      pa: 570,
+      ab: 500,
+      h: 140,
+      '2b': 28,
+      '3b': 4,
+      hr: 22,
+      bb: 55,
+      so: 120,
+      avg: 0.280,
+      slg: 0.485,
+      iso: 0.205,
+      babip: 0.310,
+      k_pct: 0.211,
+      bb_pct: 0.096
+    }
+  },
+  {
+    first_name: 'Ben',
+    last_name: 'O\'Brien',
+    bats: 'R',
+    throws: 'R',
+    primary_position: '2B',
+    batting_stats: {
+      pa: 620,
+      ab: 550,
+      h: 155,
+      '2b': 32,
+      '3b': 6,
+      hr: 12,
+      bb: 55,
+      so: 85,
+      avg: 0.282,
+      slg: 0.430,
+      iso: 0.148,
+      babip: 0.305,
+      k_pct: 0.137,
+      bb_pct: 0.089
+    }
+  },
+  {
+    first_name: 'Rafael',
+    last_name: 'Mendez',
+    bats: 'S',
+    throws: 'R',
+    primary_position: 'DH',
+    batting_stats: {
+      pa: 540,
+      ab: 475,
+      h: 130,
+      '2b': 26,
+      '3b': 2,
+      hr: 28,
+      bb: 50,
+      so: 125,
+      avg: 0.274,
+      slg: 0.505,
+      iso: 0.231,
+      babip: 0.290,
+      k_pct: 0.231,
+      bb_pct: 0.093
+    }
+  },
+
+  // Sample Pitchers (starting at player-19)
   {
     first_name: 'Jacob',
     last_name: 'Miller',
@@ -317,6 +526,80 @@ export const samplePlayers = [
       bb_pct: 0.072,
       era: 2.35,
       whip: 0.97
+    }
+  },
+  
+  // Additional pitchers for Team 2 (players 25-28)
+  {
+    first_name: 'Sergio',
+    last_name: 'Alvarez',
+    bats: 'R',
+    throws: 'R',
+    primary_position: 'SP',
+    pitching_stats: {
+      ip_outs: 570, // 190 IP
+      h: 160,
+      hr: 20,
+      bb: 48,
+      so: 210,
+      k_pct: 0.280,
+      bb_pct: 0.064,
+      era: 3.25,
+      whip: 1.09
+    }
+  },
+  {
+    first_name: 'Trevor',
+    last_name: 'Banks',
+    bats: 'L',
+    throws: 'L',
+    primary_position: 'SP',
+    pitching_stats: {
+      ip_outs: 510, // 170 IP
+      h: 150,
+      hr: 16,
+      bb: 52,
+      so: 185,
+      k_pct: 0.255,
+      bb_pct: 0.072,
+      era: 3.50,
+      whip: 1.19
+    }
+  },
+  {
+    first_name: 'Dominic',
+    last_name: 'Rivera',
+    bats: 'R',
+    throws: 'R',
+    primary_position: 'RP',
+    pitching_stats: {
+      ip_outs: 200, // 66.2 IP
+      h: 52,
+      hr: 5,
+      bb: 22,
+      so: 80,
+      k_pct: 0.305,
+      bb_pct: 0.084,
+      era: 2.90,
+      whip: 1.11
+    }
+  },
+  {
+    first_name: 'Kyle',
+    last_name: 'Sanders',
+    bats: 'R',
+    throws: 'R',
+    primary_position: 'CL',
+    pitching_stats: {
+      ip_outs: 180, // 60 IP
+      h: 42,
+      hr: 3,
+      bb: 15,
+      so: 85,
+      k_pct: 0.370,
+      bb_pct: 0.065,
+      era: 2.20,
+      whip: 0.95
     }
   }
 ]

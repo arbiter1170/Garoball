@@ -331,7 +331,8 @@ function simulatePlateAppearance(
   
   const { dice, index } = rng.rollDiceIndex()
   const diceTableRanges = probabilitiesToDiceRanges(blendedProbs)
-  const outcome = getOutcomeFromDiceIndex(index, diceTableRanges)
+  // IMPORTANT: Pass blendedProbs to get accurate outcome from the optimal dice table
+  const outcome = getOutcomeFromDiceIndex(index, diceTableRanges, blendedProbs)
   
   // Calculate runs scored
   const baseState: BaseState = {
