@@ -277,6 +277,17 @@ export default function GamePage() {
         {/* Scoreboard */}
         <Scoreboard game={game} />
 
+        {plays.length === 0 && game.status !== 'completed' && (
+          <div className="bg-blue-900/40 border border-blue-700 rounded-lg p-4 mb-6 text-blue-100">
+            <div className="font-semibold">Getting Started</div>
+            <p className="text-sm text-blue-200 mt-1">
+              Click <span className="text-blue-100 font-semibold">Next At-Bat</span> to roll the dice and start the
+              simulation. Use <span className="text-blue-100 font-semibold">Sim Inning</span> or{' '}
+              <span className="text-blue-100 font-semibold">Sim Game</span> to fast-forward.
+            </p>
+          </div>
+        )}
+
         {/* Tab Navigation */}
         <div className="flex space-x-1 bg-gray-800 rounded-lg p-1 mb-6">
           {(['live', 'boxscore', 'plays'] as GameTab[]).map((tab) => (
