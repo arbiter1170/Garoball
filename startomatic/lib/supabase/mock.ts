@@ -316,7 +316,10 @@ export const MOCK_PLAYER_RATINGS: PlayerRating[] = samplePlayers.map((p, idx) =>
 
 // Check if mock mode is enabled
 export function isMockMode(): boolean {
-    return process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+    // DEMO MODE: Hardcoded to true for Vercel deployment
+    // TODO: Restore env var check when Supabase is connected
+    // return process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+    return true  // Force mock mode for demo
 }
 
 // Mock query builder that mimics Supabase's chaining API

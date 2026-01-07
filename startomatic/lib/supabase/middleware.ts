@@ -3,9 +3,11 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Inline mock mode check to avoid edge runtime compatibility issues
-// Check both runtime (USE_MOCK) and build-time (NEXT_PUBLIC_USE_MOCK) vars
+// DEMO MODE: Hardcoded to true for Vercel deployment
 function isMockMode(): boolean {
-  return process.env.USE_MOCK === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+  // TODO: Restore env var check when Supabase is connected
+  // return process.env.USE_MOCK === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+  return true  // Force mock mode for demo
 }
 
 export async function updateSession(request: NextRequest) {
