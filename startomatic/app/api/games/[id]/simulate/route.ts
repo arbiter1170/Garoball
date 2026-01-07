@@ -12,7 +12,9 @@ import {
 import { advanceRunners, BaseState } from '@/lib/baserunning'
 import { getDramaContext } from '@/lib/drama'
 import { generateAnnouncerCall } from '@/lib/announcer'
-import type { Game, PlayerRating, Outcome } from '@/types'
+import { calculateMatchupProbabilities } from '@/lib/handedness'
+import { PitchingManager } from '@/lib/pitchingManager'
+import type { Game, PlayerRating, Outcome, Player } from '@/types'
 
 // POST /api/games/[id]/simulate - Simulate next play or full game
 export async function POST(
@@ -29,7 +31,7 @@ export async function POST(
     }
 
     const body = await request.json()
-    const { mode = 'play' } = body // 'play' for single PA, 'inning' for full inning, 'game' for full game
+    const { mode = 'play', useHandedness = true, useNpcManager = true } = body // 'play' for single PA, 'inning' for full inning, 'game' for full game
 
     // Get game state
     const { data: game, error: gameError } = await supabase
@@ -46,7 +48,7 @@ export async function POST(
       return NextResponse.json({ error: 'Game is already completed' }, { status: 400 })
     }
 
-    // Get player ratings
+    // Get player ratings and player data
     const allPlayerIds = [
       ...game.home_lineup,
       ...game.away_lineup,
@@ -65,8 +67,10 @@ export async function POST(
 
     const seasonYear = season?.year
     let ratings: unknown[] = []
+    let players: unknown[] = []
+    
     if (seasonYear) {
-      const [{ data: bat }, { data: pit }] = await Promise.all([
+      const [{ data: bat }, { data: pit }, { data: plr }] = await Promise.all([
         supabase
           .from('player_ratings')
           .select('*')
@@ -79,18 +83,69 @@ export async function POST(
           .eq('year', seasonYear)
           .eq('rating_type', 'pitching')
           .in('player_id', pitcherIds),
+        supabase
+          .from('players')
+          .select('*')
+          .in('id', allPlayerIds)
       ])
       ratings = [...(bat || []), ...(pit || [])]
+      players = plr || []
     } else {
-      const { data: fallback } = await supabase
-        .from('player_ratings')
-        .select('*')
-        .in('player_id', allPlayerIds)
-      ratings = fallback || []
+      const [{ data: fallbackRatings }, { data: fallbackPlayers }] = await Promise.all([
+        supabase
+          .from('player_ratings')
+          .select('*')
+          .in('player_id', allPlayerIds),
+        supabase
+          .from('players')
+          .select('*')
+          .in('id', allPlayerIds)
+      ])
+      ratings = fallbackRatings || []
+      players = fallbackPlayers || []
     }
 
     const ratingsMap = new Map<string, PlayerRating>()
     ratings?.forEach((r: any) => ratingsMap.set(`${r.player_id}:${r.rating_type}`, r as PlayerRating))
+    
+    const playersMap = new Map<string, Player>()
+    players?.forEach((p: any) => playersMap.set(p.id, p as Player))
+
+    // Initialize NPC Pitching Manager if enabled
+    let homePitchingManager: PitchingManager | null = null
+    let awayPitchingManager: PitchingManager | null = null
+    
+    if (useNpcManager) {
+      const homePlayers = new Map<string, Player>()
+      const awayPlayers = new Map<string, Player>()
+      const homeRatings = new Map<string, PlayerRating>()
+      const awayRatings = new Map<string, PlayerRating>()
+      
+      game.home_lineup.forEach((id: string) => {
+        const p = playersMap.get(id)
+        if (p) homePlayers.set(id, p)
+      })
+      game.home_pitchers.forEach((id: string) => {
+        const p = playersMap.get(id)
+        if (p) homePlayers.set(id, p)
+        const r = ratingsMap.get(`${id}:pitching`)
+        if (r) homeRatings.set(`${id}:pitching`, r)
+      })
+      
+      game.away_lineup.forEach((id: string) => {
+        const p = playersMap.get(id)
+        if (p) awayPlayers.set(id, p)
+      })
+      game.away_pitchers.forEach((id: string) => {
+        const p = playersMap.get(id)
+        if (p) awayPlayers.set(id, p)
+        const r = ratingsMap.get(`${id}:pitching`)
+        if (r) awayRatings.set(`${id}:pitching`, r)
+      })
+      
+      homePitchingManager = new PitchingManager(homePlayers, homeRatings)
+      awayPitchingManager = new PitchingManager(awayPlayers, awayRatings)
+    }
 
     // Initialize RNG from saved state
     const rng = game.rng_state
@@ -112,8 +167,54 @@ export async function POST(
         break
       }
 
-      const result = simulatePlateAppearance(currentGame, ratingsMap, rng)
+      // Check if NPC manager wants to make a pitching change
+      if (useNpcManager && i > 0) {
+        const pitchingManager = currentGame.half === 'top' ? homePitchingManager : awayPitchingManager
+        const currentPitcherId = currentGame.current_pitcher_id!
+        
+        if (pitchingManager) {
+          const decision = pitchingManager.shouldPullPitcher(currentGame, currentPitcherId, false)
+          
+          if (decision.shouldPull) {
+            const newPitcher = pitchingManager.selectReliefPitcher(currentGame, currentPitcherId)
+            
+            if (newPitcher) {
+              // Make the pitching change
+              currentGame.current_pitcher_id = newPitcher
+              pitchingManager.markPitcherUsed(newPitcher, currentGame.inning)
+              
+              // Add pitcher to the roster if not already there
+              const pitcherList = currentGame.half === 'top' ? currentGame.home_pitchers : currentGame.away_pitchers
+              if (!pitcherList.includes(newPitcher)) {
+                pitcherList.push(newPitcher)
+              }
+              
+              // Initialize box score for new pitcher if needed
+              const pitchingTeam = currentGame.half === 'top' ? currentGame.box_score.home : currentGame.box_score.away
+              if (!pitchingTeam.pitching[newPitcher]) {
+                pitchingTeam.pitching[newPitcher] = {
+                  ip_outs: 0, h: 0, r: 0, er: 0, bb: 0, so: 0, hr: 0
+                }
+              }
+            }
+          }
+        }
+      }
+
+      const result = simulatePlateAppearance(currentGame, ratingsMap, playersMap, rng, useHandedness)
       const { updatedGame, play } = applyResult(currentGame, result, rng, playNumber++)
+
+      // Update pitching manager state if enabled
+      if (useNpcManager) {
+        const pitchingManager = currentGame.half === 'top' ? homePitchingManager : awayPitchingManager
+        if (pitchingManager) {
+          pitchingManager.updatePitcherState(
+            result.pitcherId,
+            result.outcome,
+            result.runsScored || 0
+          )
+        }
+      }
 
       newPlays.push(play)
       currentGame = updatedGame
@@ -139,6 +240,8 @@ export async function POST(
           current_batter_idx: currentGame.current_batter_idx,
           current_pitcher_id: currentGame.current_pitcher_id,
           pitcher_outs: currentGame.pitcher_outs,
+          home_pitchers: currentGame.home_pitchers,
+          away_pitchers: currentGame.away_pitchers,
           rng_state: currentGame.rng_state,
           box_score: currentGame.box_score,
           updated_at: new Date().toISOString(),
@@ -183,7 +286,9 @@ async function getNextPlayNumber(supabase: ReturnType<typeof createClient> exten
 function simulatePlateAppearance(
   game: Game,
   ratingsMap: Map<string, PlayerRating>,
-  rng: SeededRng
+  playersMap: Map<string, Player>,
+  rng: SeededRng,
+  useHandedness: boolean = true
 ) {
   const batterId = game.half === 'top'
     ? game.away_lineup[game.current_batter_idx % game.away_lineup.length]
@@ -201,10 +306,41 @@ function simulatePlateAppearance(
     ? getRatingProbabilities(pitcherRating)
     : LEAGUE_AVERAGE_PROBS
 
-  const blendedProbs = blendProbabilities(batterProbs, pitcherProbs)
+  // Use handedness-aware calculation if enabled
+  let blendedProbs
+  let runsScored = 0
+  
+  if (useHandedness) {
+    const batter = playersMap.get(batterId)
+    const pitcher = playersMap.get(pitcherId)
+    
+    if (batter?.bats && pitcher?.throws) {
+      blendedProbs = calculateMatchupProbabilities(
+        batterProbs,
+        pitcherProbs,
+        batter.bats,
+        pitcher.throws,
+        0.65
+      )
+    } else {
+      blendedProbs = blendProbabilities(batterProbs, pitcherProbs)
+    }
+  } else {
+    blendedProbs = blendProbabilities(batterProbs, pitcherProbs)
+  }
+  
   const { dice, index } = rng.rollDiceIndex()
   const diceTableRanges = probabilitiesToDiceRanges(blendedProbs)
   const outcome = getOutcomeFromDiceIndex(index, diceTableRanges)
+  
+  // Calculate runs scored
+  const baseState: BaseState = {
+    runner1b: game.runner_1b,
+    runner2b: game.runner_2b,
+    runner3b: game.runner_3b
+  }
+  const baseResult = advanceRunners(baseState, batterId, outcome, game.outs)
+  runsScored = baseResult.runsScored
 
   return {
     batterId,
@@ -215,7 +351,8 @@ function simulatePlateAppearance(
     batterProbs,
     pitcherProbs,
     blendedProbs,
-    diceTableRanges
+    diceTableRanges,
+    runsScored
   }
 }
 
@@ -225,14 +362,7 @@ function applyResult(
   rng: SeededRng,
   playNumber: number
 ) {
-  const { batterId, pitcherId, outcome, dice, diceIndex, batterProbs, pitcherProbs, blendedProbs, diceTableRanges } = result
-
-  const baseState: BaseState = {
-    runner1b: game.runner_1b,
-    runner2b: game.runner_2b,
-    runner3b: game.runner_3b
-  }
-  const baseResult = advanceRunners(baseState, batterId, outcome, game.outs)
+  const { batterId, pitcherId, outcome, dice, diceIndex, batterProbs, pitcherProbs, blendedProbs, diceTableRanges, runsScored } = result
 
   // Create play record
   const play = {
@@ -249,7 +379,7 @@ function applyResult(
     batter_id: batterId,
     pitcher_id: pitcherId,
     outcome,
-    runs_scored: baseResult.runsScored,
+    runs_scored: runsScored,
     dice_values: dice,
     dice_index: diceIndex,
     batter_probs: batterProbs,
@@ -267,7 +397,7 @@ function applyResult(
   const call = generateAnnouncerCall(
     game,
     outcome,
-    baseResult.runsScored,
+    runsScored,
     drama.dramaLevel,
     drama.isWalkOffSituation,
     drama.isComebackPotential
@@ -279,14 +409,23 @@ function applyResult(
   // Update game state
   const updatedGame = { ...game }
   updatedGame.status = 'in_progress'
+  
+  // Calculate new base state
+  const baseState: BaseState = {
+    runner1b: game.runner_1b,
+    runner2b: game.runner_2b,
+    runner3b: game.runner_3b
+  }
+  const baseResult = advanceRunners(baseState, batterId, outcome, game.outs)
+  
   updatedGame.runner_1b = baseResult.newState.runner1b
   updatedGame.runner_2b = baseResult.newState.runner2b
   updatedGame.runner_3b = baseResult.newState.runner3b
 
   if (game.half === 'top') {
-    updatedGame.away_score += baseResult.runsScored
+    updatedGame.away_score += runsScored
   } else {
-    updatedGame.home_score += baseResult.runsScored
+    updatedGame.home_score += runsScored
   }
 
   if (outcome === 'K' || outcome === 'OUT') {
@@ -295,7 +434,7 @@ function applyResult(
   }
 
   // Update box score
-  updateBoxScore(updatedGame, batterId, pitcherId, outcome, baseResult.runsScored)
+  updateBoxScore(updatedGame, batterId, pitcherId, outcome, runsScored)
 
   // Advance batter
   const lineup = game.half === 'top' ? game.away_lineup : game.home_lineup

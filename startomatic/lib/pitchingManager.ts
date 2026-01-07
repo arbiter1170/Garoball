@@ -63,7 +63,7 @@ export class PitchingManager {
   }
 
   private initializePitchers(): void {
-    for (const [playerId, player] of this.roster) {
+    Array.from(this.roster.entries()).forEach(([playerId, player]) => {
       if (player.throws) {
         // Determine pitcher role based on rating (simplified for MVP)
         const rating = this.ratings.get(`${playerId}:pitching`)
@@ -79,7 +79,7 @@ export class PitchingManager {
           role
         })
       }
-    }
+    })
   }
 
   private determinePitcherRole(rating?: PlayerRating): 'starter' | 'reliever' | 'closer' {
