@@ -3,8 +3,9 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Inline mock mode check to avoid edge runtime compatibility issues
+// Check both runtime (USE_MOCK) and build-time (NEXT_PUBLIC_USE_MOCK) vars
 function isMockMode(): boolean {
-  return process.env.NEXT_PUBLIC_USE_MOCK === 'true'
+  return process.env.USE_MOCK === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true'
 }
 
 export async function updateSession(request: NextRequest) {
