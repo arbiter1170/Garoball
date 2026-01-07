@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd startomatic && npm run build",
+  "installCommand": "cd startomatic && npm install",
+  "framework": "nextjs",
+  "outputDirectory": "startomatic/.next"
+}
+
