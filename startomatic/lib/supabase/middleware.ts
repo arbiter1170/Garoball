@@ -4,18 +4,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // Inline mock mode check to avoid edge runtime compatibility issues
 function isMockMode(): boolean {
-  // Enable mock mode if explicitly set OR if Supabase credentials are missing
-  if (process.env.USE_MOCK === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true') {
-    return true
-  }
-  
-  // Auto-enable mock mode if Supabase credentials are not configured
-  const hasCredentials = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && 
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
-  
-  return !hasCredentials
+  // Mock mode must be explicitly enabled - no auto-fallback
+  return process.env.NEXT_PUBLIC_USE_MOCK === 'true'
 }
 
 export async function updateSession(request: NextRequest) {
