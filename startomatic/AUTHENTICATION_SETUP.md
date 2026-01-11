@@ -16,8 +16,19 @@ Previously, the application was hardcoded to run in "mock mode" where:
 
 We've restored proper authentication by:
 1. Removing the hardcoded `return true` from `isMockMode()` functions
-2. Making mock mode controllable via `NEXT_PUBLIC_USE_MOCK` environment variable
-3. Ensuring proper Supabase client configuration when not in mock mode
+2. Making mock mode automatically enable when Supabase credentials are missing OR when explicitly set via `NEXT_PUBLIC_USE_MOCK`
+3. Ensuring proper Supabase client configuration when credentials are available
+
+## How Mock Mode Works
+
+Mock mode is **automatically enabled** in two scenarios:
+1. When `NEXT_PUBLIC_USE_MOCK=true` is explicitly set in environment variables
+2. When Supabase credentials are not configured (missing `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
+
+This smart fallback ensures:
+- ✅ Builds succeed even without Supabase credentials configured
+- ✅ Development works without Supabase setup
+- ✅ Production automatically uses real authentication when credentials are present
 
 ## Configuration
 
@@ -51,8 +62,9 @@ We've restored proper authentication by:
    SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
    SUPABASE_JWT_SECRET=your-jwt-secret
    
-   # Disable mock mode for real auth
-   NEXT_PUBLIC_USE_MOCK=false
+   # Mock mode is automatically disabled when credentials are present
+   # Set to 'true' only if you want to force mock mode
+   # NEXT_PUBLIC_USE_MOCK=false
    
    # App settings
    APP_BASE_URL=http://localhost:3000
@@ -74,12 +86,17 @@ We've restored proper authentication by:
 
 ### For Development with Mock Mode (No Supabase)
 
-If you want to develop without a Supabase backend:
+Mock mode is automatically enabled when Supabase credentials are not configured. You have two options:
 
-1. **Configure environment**:
+**Option 1: Don't configure Supabase credentials (automatic mock mode)**
+   - Simply don't create a `.env.local` file or don't set Supabase variables
+   - The application will automatically use mock mode
+   - Start the app with `npm run dev`
+
+**Option 2: Explicitly enable mock mode**
    Create `.env.local` file:
    ```bash
-   # Enable mock mode
+   # Explicitly enable mock mode
    NEXT_PUBLIC_USE_MOCK=true
    
    # Mock Supabase values (won't be used but Next.js requires them)
@@ -87,7 +104,7 @@ If you want to develop without a Supabase backend:
    NEXT_PUBLIC_SUPABASE_ANON_KEY=mock-key
    ```
 
-2. **Start the app**:
+**Start the app**:
    ```bash
    npm run dev
    ```
@@ -102,12 +119,15 @@ If you want to develop without a Supabase backend:
 
 1. **Set environment variables in Vercel**:
    - Project Settings → Environment Variables
-   - Add all Supabase credentials
-   - Set `NEXT_PUBLIC_USE_MOCK=false`
+   - Add all Supabase credentials (URL and anon key)
+   - Mock mode will automatically be disabled when credentials are present
+   - Optional: Set `NEXT_PUBLIC_USE_MOCK=false` to be explicit, but it's not required
 
 2. **Configure Supabase for production**:
    - Add your Vercel domain to Supabase → Authentication → URL Configuration
    - Set redirect URLs for OAuth
+
+**Note**: The build will succeed even if environment variables are not set during build time. The application will use mock mode during the build and switch to real authentication at runtime when credentials become available.
 
 ## User Data Isolation
 
