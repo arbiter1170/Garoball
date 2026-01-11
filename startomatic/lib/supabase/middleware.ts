@@ -3,11 +3,19 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // Inline mock mode check to avoid edge runtime compatibility issues
-// DEMO MODE: Hardcoded to true for Vercel deployment
 function isMockMode(): boolean {
-  // TODO: Restore env var check when Supabase is connected
-  // return process.env.USE_MOCK === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true'
-  return true  // Force mock mode for demo
+  // Enable mock mode if explicitly set OR if Supabase credentials are missing
+  if (process.env.USE_MOCK === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true') {
+    return true
+  }
+  
+  // Auto-enable mock mode if Supabase credentials are not configured
+  const hasCredentials = Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && 
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )
+  
+  return !hasCredentials
 }
 
 export async function updateSession(request: NextRequest) {

@@ -313,10 +313,19 @@ export const MOCK_PLAYER_RATINGS: PlayerRating[] = samplePlayers.map((p, idx) =>
 
 // Check if mock mode is enabled
 export function isMockMode(): boolean {
-    // DEMO MODE: Hardcoded to true for Vercel deployment
-    // TODO: Restore env var check when Supabase is connected
-    // return process.env.NEXT_PUBLIC_USE_MOCK === 'true'
-    return true  // Force mock mode for demo
+    // Enable mock mode if explicitly set OR if Supabase credentials are missing
+    // This allows builds to succeed even without credentials configured
+    if (process.env.NEXT_PUBLIC_USE_MOCK === 'true') {
+        return true
+    }
+    
+    // Auto-enable mock mode if Supabase credentials are not configured
+    const hasCredentials = Boolean(
+        process.env.NEXT_PUBLIC_SUPABASE_URL && 
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    )
+    
+    return !hasCredentials
 }
 
 // Mock query builder that mimics Supabase's chaining API
