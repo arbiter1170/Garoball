@@ -111,12 +111,29 @@ If you want to develop without a Supabase backend:
 
 ## User Data Isolation
 
-The application uses Row Level Security (RLS) policies to ensure data isolation:
+The application uses Row Level Security (RLS) policies to ensure proper data access:
 
-- **Teams**: Users can only modify teams they own or commission
-- **Games**: Games are visible to users whose teams are playing
-- **Leagues**: Users can only modify leagues they commission
-- **Profiles**: Users can only modify their own profile
+- **Teams**: 
+  - All authenticated users can VIEW teams (necessary for league play)
+  - Users can only MODIFY teams they own or commission
+- **Games**: 
+  - All authenticated users can VIEW games (necessary for standings and league play)
+  - Only commissioners or team owners can CREATE/UPDATE games
+- **Leagues**: 
+  - All authenticated users can VIEW leagues
+  - Users can only MODIFY leagues they commission
+- **Profiles**: 
+  - All users can VIEW profiles
+  - Users can only MODIFY their own profile
+
+**Important**: By design, users in the same league can see each other's teams and games. This is expected behavior for a league-based system. User isolation happens at the league level - users only see leagues where they're a commissioner or have a team.
+
+The dashboard filters to show:
+- Only teams owned by the current user
+- Only games involving the user's teams
+- Only leagues where the user is commissioner
+
+This provides a personalized view while maintaining league-wide visibility for competitive play.
 
 ## Authentication Flow
 
