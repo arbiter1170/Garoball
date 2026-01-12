@@ -54,6 +54,8 @@ export default async function DashboardPage() {
         inning,
         half,
         outs,
+        home_score,
+        away_score,
         home_team_id,
         away_team_id,
         home_team:teams!home_team_id (id, name, abbreviation, primary_color),
