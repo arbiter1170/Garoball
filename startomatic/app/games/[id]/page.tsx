@@ -289,12 +289,21 @@ export default function GamePage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Team Context Badge - shows which team the user owns in this game */}
-        {userTeam && userTeamLeague && (
-          <TeamContextBadge
-            team={userTeam}
-            league={userTeamLeague}
-            showBackLink={true}
-          />
+        {userTeam && (
+          <>
+            {!userTeamLeague &&
+              console.warn(
+                '[GamePage] userTeam is set but userTeamLeague is missing. This may indicate missing or invalid league data for the team.',
+                { userTeam }
+              )}
+            {userTeamLeague && (
+              <TeamContextBadge
+                team={userTeam}
+                league={userTeamLeague}
+                showBackLink={true}
+              />
+            )}
+          </>
         )}
 
         {/* Scoreboard */}
