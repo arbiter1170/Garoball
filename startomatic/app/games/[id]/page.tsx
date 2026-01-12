@@ -10,6 +10,7 @@ import { PlayByPlay } from '@/components/game/PlayByPlay'
 import { BoxScore } from '@/components/game/BoxScore'
 import { DiceDisplay } from '@/components/game/DiceDisplay'
 import { PlayerCard } from '@/components/game/PlayerCard'
+import { TeamContextBadge } from '@/components/layout/TeamContextBadge'
 import { useAudio } from '@/hooks/useAudio'
 import type { Game, Play, Player, PlayerRating, Team } from '@/types'
 import type { Outcome } from '@/lib/audio'
@@ -31,8 +32,9 @@ export default function GamePage() {
   const [ratings, setRatings] = useState<Map<string, PlayerRating>>(new Map())
   const [seasonYear, setSeasonYear] = useState<number | null>(null)
   const [mlbTeams, setMlbTeams] = useState<Map<string, string>>(new Map())
-  const [homeTeam, setHomeTeam] = useState<Team | null>(null)
-  const [awayTeam, setAwayTeam] = useState<Team | null>(null)
+  const [homeTeam, setHomeTeam] = useState<(Team & { league?: { id: string; name: string } }) | null>(null)
+  const [awayTeam, setAwayTeam] = useState<(Team & { league?: { id: string; name: string } }) | null>(null)
+  const [userTeamId, setUserTeamId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [simulating, setSimulating] = useState(false)
   const [activeTab, setActiveTab] = useState<GameTab>('live')
@@ -67,6 +69,11 @@ export default function GamePage() {
       }
       if (data.game?.away_team) {
         setAwayTeam(data.game.away_team)
+      }
+
+      // Set user's team ID if they own a team in this game
+      if (data.userTeamId) {
+        setUserTeamId(data.userTeamId)
       }
 
       // Build player map
@@ -274,6 +281,26 @@ export default function GamePage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Team Context Badge - shows which team the user owns in this game */}
+        {userTeamId && (homeTeam || awayTeam) && (() => {
+          const userTeam = userTeamId === homeTeam?.id ? homeTeam : awayTeam
+          const league = userTeam?.league
+          if (!userTeam || !league) return null
+          return (
+            <TeamContextBadge
+              team={{
+                id: userTeam.id,
+                name: userTeam.name,
+                abbreviation: userTeam.abbreviation,
+                city: userTeam.city,
+                primary_color: userTeam.primary_color
+              }}
+              league={league}
+              showBackLink={true}
+            />
+          )
+        })()}
+
         {/* Scoreboard */}
         <Scoreboard game={game} />
 
