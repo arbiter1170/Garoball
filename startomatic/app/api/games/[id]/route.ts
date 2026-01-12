@@ -21,8 +21,8 @@ export async function GET(
       .from('games')
       .select(`
         *,
-        home_team:teams!home_team_id (*, league:leagues (id, name)),
-        away_team:teams!away_team_id (*, league:leagues (id, name))
+        home_team:teams!home_team_id (id, owner_id, league:leagues (id, name)),
+        away_team:teams!away_team_id (id, owner_id, league:leagues (id, name))
       `)
       .eq('id', id)
       .single()
