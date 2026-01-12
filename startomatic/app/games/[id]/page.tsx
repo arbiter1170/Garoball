@@ -172,7 +172,7 @@ export default function GamePage() {
         playDiceRoll()
         // Small delay for outcome sound after dice
         setTimeout(() => {
-          const outcome = latestPlay.result_code as Outcome
+          const outcome = latestPlay.outcome as Outcome
           if (outcome) playOutcome(outcome)
 
         }, 400)
