@@ -10,6 +10,7 @@ import { PlayByPlay } from '@/components/game/PlayByPlay'
 import { BoxScore } from '@/components/game/BoxScore'
 import { DiceDisplay } from '@/components/game/DiceDisplay'
 import { PlayerCard } from '@/components/game/PlayerCard'
+import { TeamContextBadge } from '@/components/layout/TeamContextBadge'
 import { useAudio } from '@/hooks/useAudio'
 import type { Game, Play, Player, PlayerRating, Team } from '@/types'
 import type { Outcome } from '@/lib/audio'
@@ -21,6 +22,9 @@ import { AchievementToastContainer } from '@/components/game/AchievementToast'
 
 type GameTab = 'live' | 'boxscore' | 'plays'
 
+// Extended Team type that includes league info from joined query
+export type TeamWithLeague = Team & { league?: { id: string; name: string } }
+
 export default function GamePage() {
   const params = useParams()
   const gameId = params.id as string
@@ -31,8 +35,9 @@ export default function GamePage() {
   const [ratings, setRatings] = useState<Map<string, PlayerRating>>(new Map())
   const [seasonYear, setSeasonYear] = useState<number | null>(null)
   const [mlbTeams, setMlbTeams] = useState<Map<string, string>>(new Map())
-  const [homeTeam, setHomeTeam] = useState<Team | null>(null)
-  const [awayTeam, setAwayTeam] = useState<Team | null>(null)
+  const [homeTeam, setHomeTeam] = useState<TeamWithLeague | null>(null)
+  const [awayTeam, setAwayTeam] = useState<TeamWithLeague | null>(null)
+  const [userTeamId, setUserTeamId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [simulating, setSimulating] = useState(false)
   const [activeTab, setActiveTab] = useState<GameTab>('live')
@@ -67,6 +72,11 @@ export default function GamePage() {
       }
       if (data.game?.away_team) {
         setAwayTeam(data.game.away_team)
+      }
+
+      // Set user's team ID if they own a team in this game
+      if (data.userTeamId) {
+        setUserTeamId(data.userTeamId)
       }
 
       // Build player map
@@ -245,6 +255,10 @@ export default function GamePage() {
   const currentBatterRating = currentBatterId ? ratings.get(`${currentBatterId}:batting`) : undefined
   const currentPitcherRating = game?.current_pitcher_id ? ratings.get(`${game.current_pitcher_id}:pitching`) : undefined
 
+  // Compute user's team data for TeamContextBadge
+  const userTeam = userTeamId === homeTeam?.id ? homeTeam : (userTeamId === awayTeam?.id ? awayTeam : null)
+  const userTeamLeague = userTeam?.league
+
   return (
     <div className="min-h-screen bg-gray-900 text-white relative">
       <AchievementToastContainer
@@ -274,6 +288,24 @@ export default function GamePage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Team Context Badge - shows which team the user owns in this game */}
+        {userTeam && (
+          <>
+            {!userTeamLeague &&
+              console.warn(
+                '[GamePage] userTeam is set but userTeamLeague is missing. This may indicate missing or invalid league data for the team.',
+                { userTeam }
+              )}
+            {userTeamLeague && (
+              <TeamContextBadge
+                team={userTeam}
+                league={userTeamLeague}
+                showBackLink={true}
+              />
+            )}
+          </>
+        )}
+
         {/* Scoreboard */}
         <Scoreboard game={game} />
 

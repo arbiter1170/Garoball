@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/Button'
+import { GlobalHeader } from '@/components/layout/GlobalHeader'
+import { ActiveGamesPanel, type ActiveGame } from '@/components/layout/ActiveGamesPanel'
 
 // Force dynamic rendering to avoid static generation at build time
 export const dynamic = 'force-dynamic'
@@ -40,56 +42,52 @@ export default async function DashboardPage() {
   // Get recent games for user's teams
   const teamIds = teams?.map(t => t.id) || []
   let recentGames: unknown[] = []
+  let activeGames: unknown[] = []
 
   if (teamIds.length > 0) {
     const { data: games } = await supabase
       .from('games')
       .select(`
-        *,
-        home_team:teams!home_team_id (id, name, abbreviation),
-        away_team:teams!away_team_id (id, name, abbreviation)
+        id,
+        status,
+        created_at,
+        inning,
+        half,
+        outs,
+        home_score,
+        away_score,
+        home_team_id,
+        away_team_id,
+        home_team:teams!home_team_id (id, name, abbreviation, primary_color),
+        away_team:teams!away_team_id (id, name, abbreviation, primary_color)
       `)
       .or(`home_team_id.in.(${teamIds.join(',')}),away_team_id.in.(${teamIds.join(',')})`)
       .order('created_at', { ascending: false })
-      .limit(5)
+      .limit(10)
 
     recentGames = games || []
+    
+    // Filter only in-progress games for the active games panel
+    activeGames = (games || []).filter((g: { status: string }) => g.status === 'in_progress')
   }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/dashboard" className="text-2xl font-bold">
-            ⚾ Garoball
-          </Link>
-          <nav className="flex items-center space-x-4">
-            <Link href="/leagues" className="text-gray-300 hover:text-white">
-              Leagues
-            </Link>
-            <Link href="/around-the-horn" className="text-gray-300 hover:text-white">
-              News
-            </Link>
-            <Link href="/store" className="text-gray-300 hover:text-white">
-              Store
-            </Link>
-            <Link href="/glossary" className="text-gray-300 hover:text-white">
-              Glossary
-            </Link>
-            <span className="text-gray-400">|</span>
-            <span className="text-gray-300">{profile?.display_name || profile?.username || user.email}</span>
-            <form action="/auth/signout" method="post">
-              <Button variant="ghost" size="sm" type="submit">
-                Sign Out
-              </Button>
-            </form>
-          </nav>
-        </div>
-      </header>
+      {/* Global Header */}
+      <GlobalHeader 
+        user={{ email: user.email || undefined }} 
+        profile={profile} 
+        unreadNewsCount={0} 
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+
+        {/* Active Games Panel */}
+        <ActiveGamesPanel 
+          games={activeGames as ActiveGame[]}
+          userTeamIds={teamIds}
+        />
 
         {/* Getting Started Banner - Show for new users */}
         {(!teams || teams.length === 0) && (!ownedLeagues || ownedLeagues.length === 0) && (

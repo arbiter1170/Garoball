@@ -16,13 +16,13 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get game with teams
+    // Get game with teams (including league info)
     const { data: game, error: gameError } = await supabase
       .from('games')
       .select(`
         *,
-        home_team:teams!home_team_id (*),
-        away_team:teams!away_team_id (*)
+        home_team:teams!home_team_id (id, owner_id, league:leagues (id, name)),
+        away_team:teams!away_team_id (id, owner_id, league:leagues (id, name))
       `)
       .eq('id', id)
       .single()
@@ -97,12 +97,21 @@ export async function GET(
       ratings = fallback || []
     }
 
+    // Determine which team the user owns (if any)
+    let userTeamId: string | null = null
+    if (game.home_team?.owner_id === user.id) {
+      userTeamId = game.home_team.id
+    } else if (game.away_team?.owner_id === user.id) {
+      userTeamId = game.away_team.id
+    }
+
     return NextResponse.json({ 
       game, 
       plays: plays || [],
       players: players || [],
       ratings,
-      season_year: seasonYear || null
+      season_year: seasonYear || null,
+      userTeamId
     })
   } catch (error) {
     console.error('Error fetching game:', error)

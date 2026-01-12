@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-interface ActiveGame {
+export interface ActiveGame {
     id: string
     status: string
     inning: number
@@ -21,8 +21,10 @@ interface ActiveGamesPanelProps {
 }
 
 export function ActiveGamesPanel({ games, userTeamIds }: ActiveGamesPanelProps) {
+    // Defensive check: ensure only in_progress games are displayed
+    // even if parent filtering logic changes in the future
     const activeGames = games.filter(g => g.status === 'in_progress')
-
+    
     if (activeGames.length === 0) {
         return null
     }
