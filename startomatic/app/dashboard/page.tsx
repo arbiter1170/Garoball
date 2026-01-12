@@ -67,7 +67,8 @@ export default async function DashboardPage() {
     
     // Pass all games; ActiveGamesPanel will filter active ones
     activeGames = games || []
-  }
+        profile={profile} 
+        // TODO: Replace hardcoded 0 with actual unread news/notifications count for this user from the database
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
