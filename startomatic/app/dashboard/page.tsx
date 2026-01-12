@@ -68,6 +68,12 @@ export default async function DashboardPage() {
             <Link href="/leagues" className="text-gray-300 hover:text-white">
               Leagues
             </Link>
+            <Link href="/around-the-horn" className="text-gray-300 hover:text-white">
+              News
+            </Link>
+            <Link href="/store" className="text-gray-300 hover:text-white">
+              Store
+            </Link>
             <Link href="/glossary" className="text-gray-300 hover:text-white">
               Glossary
             </Link>
@@ -204,8 +210,8 @@ export default async function DashboardPage() {
                           </div>
                           <div className="ml-4 text-right">
                             <span className={`text-sm px-2 py-1 rounded ${g.status === 'completed' ? 'bg-green-900 text-green-200' :
-                                g.status === 'in_progress' ? 'bg-yellow-900 text-yellow-200' :
-                                  'bg-gray-600 text-gray-300'
+                              g.status === 'in_progress' ? 'bg-yellow-900 text-yellow-200' :
+                                'bg-gray-600 text-gray-300'
                               }`}>
                               {g.status === 'completed' ? 'Final' :
                                 g.status === 'in_progress' ? 'Live' : 'Scheduled'}
