@@ -170,6 +170,7 @@ export interface Game {
 }
 
 export interface RngState {
+  seed?: number
   callCount: number
 }
 

@@ -61,6 +61,7 @@ export function initializeGame(
   seed?: string
 ): Partial<Game> {
   const gameSeed = seed || generateSeed()
+  const rngState = new SeededRng(gameSeed).getState()
 
   const emptyBattingLine = (): PlayerBattingLine => ({
     ab: 0, r: 0, h: 0, rbi: 0, bb: 0, so: 0, '2b': 0, '3b': 0, hr: 0
@@ -120,7 +121,7 @@ export function initializeGame(
     home_pitchers: [homePitcherId],
     away_pitchers: [awayPitcherId],
     seed: gameSeed,
-    rng_state: { callCount: 0 },
+    rng_state: { seed: rngState.seed, callCount: 0 },
     box_score: boxScore
   }
 }

@@ -148,9 +148,10 @@ export async function POST(
     }
 
     // Initialize RNG from saved state
-    const rng = game.rng_state
-      ? SeededRng.fromState({ seed: parseInt(game.seed, 36) || 1, callCount: game.rng_state.callCount })
-      : new SeededRng(game.seed)
+    const fallbackSeed = new SeededRng(game.seed).getState().seed
+    const callCount = typeof game.rng_state?.callCount === 'number' ? game.rng_state.callCount : 0
+    const seed = typeof game.rng_state?.seed === 'number' ? game.rng_state.seed : fallbackSeed
+    const rng = SeededRng.fromState({ seed, callCount })
 
     let currentGame = { ...game } as Game
     const newPlays: unknown[] = []

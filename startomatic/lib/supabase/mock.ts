@@ -2,6 +2,7 @@
 // Enable with NEXT_PUBLIC_USE_MOCK=true in .env.local
 
 import { samplePlayers, teamTemplates } from '@/data/samplePlayers'
+import { SeededRng } from '@/lib/rng'
 import type { Game, Play, PlayerRating, BoxScore, TeamBoxScore, PlayerBattingLine, PlayerPitchingLine } from '@/types'
 
 // Mock user for development
@@ -124,6 +125,8 @@ function createPitchingRecords(pitchers: string[]): Record<string, PlayerPitchin
 
 // Create a new game that can be simulated
 function createPlayableGame(id: string, status: 'scheduled' | 'in_progress' | 'completed' = 'scheduled'): Game {
+    const gameSeed = `mock-seed-${Date.now()}`
+    const rngState = new SeededRng(gameSeed).getState()
     const boxScore: BoxScore = {
         home: {
             innings: [],
@@ -163,8 +166,8 @@ function createPlayableGame(id: string, status: 'scheduled' | 'in_progress' | 'c
         away_lineup: TEAM2_LINEUP,
         home_pitchers: TEAM1_PITCHERS,
         away_pitchers: TEAM2_PITCHERS,
-        seed: `mock-seed-${Date.now()}`, // Generate unique seed for each game
-        rng_state: { callCount: 0 },
+        seed: gameSeed, // Generate unique seed for each game
+        rng_state: { seed: rngState.seed, callCount: 0 },
         box_score: boxScore,
         created_at: '2024-01-01T00:00:00.000Z',
         updated_at: '2024-01-01T00:00:00.000Z',

@@ -174,3 +174,4 @@ Live demo: **https://startomatic.vercel.app**
 4. Stolen bases
 5. Custom typography
 
+

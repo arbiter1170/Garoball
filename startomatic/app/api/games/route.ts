@@ -1,6 +1,7 @@
 // API route for games
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { SeededRng } from '@/lib/rng'
 
 // GET /api/games - List games (with filters)
 export async function GET(request: NextRequest) {
@@ -100,6 +101,7 @@ export async function POST(request: NextRequest) {
     // Generate seed for deterministic simulation
     const seed = Math.random().toString(36).substring(2, 15) + 
                  Math.random().toString(36).substring(2, 15)
+    const rngState = new SeededRng(seed).getState()
 
     // Initialize empty box score
     const homeBatting: Record<string, unknown> = {}
@@ -156,7 +158,7 @@ export async function POST(request: NextRequest) {
         home_pitchers: [home_pitcher_id],
         away_pitchers: [away_pitcher_id],
         seed,
-        rng_state: { callCount: 0 },
+        rng_state: { seed: rngState.seed, callCount: 0 },
         box_score: boxScore
       })
       .select(`
