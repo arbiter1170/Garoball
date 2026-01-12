@@ -159,21 +159,23 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1a472a] py-12 px-4 relative overflow-hidden">
       {/* Background grass pattern */}
-      <div className="absolute inset-0 opacity-30">
+      <div className="absolute inset-0 opacity-30 pointer-events-none">
         <div className="absolute inset-0" style={{
           backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 40px)`
         }} />
       </div>
 
       {/* Diamond decoration */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-10">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] opacity-10 pointer-events-none">
         <svg viewBox="0 0 100 100" className="w-full h-full">
           <polygon points="50,10 90,50 50,90 10,50" fill="#c4a77d" />
         </svg>
       </div>
 
       <Suspense fallback={<div className="text-white">Loading...</div>}>
-        <LoginForm />
+        <div className="relative z-10">
+          <LoginForm />
+        </div>
       </Suspense>
     </div>
   )

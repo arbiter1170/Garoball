@@ -87,18 +87,18 @@ export default function Home() {
         </div>
 
         {/* Feature pills */}
-        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-10 max-w-xl px-2">
-          <FeaturePill emoji="🎲" text="3d6 Dice System" />
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6 sm:mb-8 max-w-2xl px-4">
+          <FeaturePill emoji="🎲" text="3D6 Dice System" />
           <FeaturePill emoji="🃏" text="Player Cards" />
           <FeaturePill emoji="📊" text="Real MLB Stats" />
-          <FeaturePill emoji="🏆" text="Season Sims" />
+          <FeaturePill emoji="🏆" text="Season Simulations" />
         </div>
 
         {/* How it works */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl w-full px-4">
-          <StepCard number={1} title="Draft Your Team" desc="Build rosters from 150+ years of MLB history" />
-          <StepCard number={2} title="Set Your Lineup" desc="Pick your 9 batters and starting rotation" />
-          <StepCard number={3} title="Play Ball!" desc="Watch games unfold pitch by pitch or sim seasons" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-4xl w-full px-4">
+          <StepCard number={1} title="Draft Your Team" desc="Build rosters from 150+ years of MLB history." />
+          <StepCard number={2} title="Set Your Lineup" desc="Pick your 9 batters and starting rotation." />
+          <StepCard number={3} title="Play Ball!" desc="Watch games unfold pitch-by-pitch or simulate entire seasons." />
         </div>
 
         {/* New account prompt */}
