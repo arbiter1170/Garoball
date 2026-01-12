@@ -22,6 +22,9 @@ import { AchievementToastContainer } from '@/components/game/AchievementToast'
 
 type GameTab = 'live' | 'boxscore' | 'plays'
 
+// Extended Team type that includes league info from joined query
+type TeamWithLeague = Team & { league?: { id: string; name: string } }
+
 export default function GamePage() {
   const params = useParams()
   const gameId = params.id as string
@@ -32,8 +35,8 @@ export default function GamePage() {
   const [ratings, setRatings] = useState<Map<string, PlayerRating>>(new Map())
   const [seasonYear, setSeasonYear] = useState<number | null>(null)
   const [mlbTeams, setMlbTeams] = useState<Map<string, string>>(new Map())
-  const [homeTeam, setHomeTeam] = useState<(Team & { league?: { id: string; name: string } }) | null>(null)
-  const [awayTeam, setAwayTeam] = useState<(Team & { league?: { id: string; name: string } }) | null>(null)
+  const [homeTeam, setHomeTeam] = useState<TeamWithLeague | null>(null)
+  const [awayTeam, setAwayTeam] = useState<TeamWithLeague | null>(null)
   const [userTeamId, setUserTeamId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [simulating, setSimulating] = useState(false)
@@ -252,6 +255,10 @@ export default function GamePage() {
   const currentBatterRating = currentBatterId ? ratings.get(`${currentBatterId}:batting`) : undefined
   const currentPitcherRating = game?.current_pitcher_id ? ratings.get(`${game.current_pitcher_id}:pitching`) : undefined
 
+  // Compute user's team data for TeamContextBadge
+  const userTeam = userTeamId === homeTeam?.id ? homeTeam : (userTeamId === awayTeam?.id ? awayTeam : null)
+  const userTeamLeague = userTeam?.league
+
   return (
     <div className="min-h-screen bg-gray-900 text-white relative">
       <AchievementToastContainer
@@ -282,24 +289,19 @@ export default function GamePage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Team Context Badge - shows which team the user owns in this game */}
-        {userTeamId && (homeTeam || awayTeam) && (() => {
-          const userTeam = userTeamId === homeTeam?.id ? homeTeam : awayTeam
-          const league = userTeam?.league
-          if (!userTeam || !league) return null
-          return (
-            <TeamContextBadge
-              team={{
-                id: userTeam.id,
-                name: userTeam.name,
-                abbreviation: userTeam.abbreviation,
-                city: userTeam.city,
-                primary_color: userTeam.primary_color
-              }}
-              league={league}
-              showBackLink={true}
-            />
-          )
-        })()}
+        {userTeam && userTeamLeague && (
+          <TeamContextBadge
+            team={{
+              id: userTeam.id,
+              name: userTeam.name,
+              abbreviation: userTeam.abbreviation,
+              city: userTeam.city,
+              primary_color: userTeam.primary_color
+            }}
+            league={userTeamLeague}
+            showBackLink={true}
+          />
+        )}
 
         {/* Scoreboard */}
         <Scoreboard game={game} />

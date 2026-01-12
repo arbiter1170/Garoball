@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 
-interface ActiveGame {
+export interface ActiveGame {
     id: string
     status: string
     inning: number

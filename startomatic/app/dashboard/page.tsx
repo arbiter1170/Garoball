@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/Button'
 import { GlobalHeader } from '@/components/layout/GlobalHeader'
-import { ActiveGamesPanel } from '@/components/layout/ActiveGamesPanel'
+import { ActiveGamesPanel, type ActiveGame } from '@/components/layout/ActiveGamesPanel'
 
 // Force dynamic rendering to avoid static generation at build time
 export const dynamic = 'force-dynamic'
@@ -76,17 +76,7 @@ export default async function DashboardPage() {
 
         {/* Active Games Panel */}
         <ActiveGamesPanel 
-          games={activeGames as {
-            id: string
-            status: string
-            inning: number
-            half: 'top' | 'bottom'
-            outs: number
-            home_score: number
-            away_score: number
-            home_team: { id: string; name: string; abbreviation: string; primary_color?: string }
-            away_team: { id: string; name: string; abbreviation: string; primary_color?: string }
-          }[]}
+          games={activeGames as ActiveGame[]}
           userTeamIds={teamIds}
         />
 
