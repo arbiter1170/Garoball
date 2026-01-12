@@ -181,7 +181,7 @@ export default function GamePage() {
         if (latestPlay.outcome) {
           // Update momentum
           const batterId = latestPlay.batter_id
-          const outcome = latestPlay.result_code as Outcome // Assuming mapping needed if types differ
+          const outcome = latestPlay.outcome as Outcome // Fixed: was result_code
 
           setPlayerMomentum(prev => {
             const next = new Map(prev)

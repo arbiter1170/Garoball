@@ -37,9 +37,9 @@ export function DiamondView({ runner1b, runner2b, runner3b, outs, players }: Dia
           <line x1="50" y1="15" x2="15" y2="50" stroke="#fff" strokeWidth="1" opacity="0.8" />
           <line x1="15" y1="50" x2="50" y2="85" stroke="#fff" strokeWidth="1" opacity="0.8" />
 
-          {/* Home plate */}
+          {/* Home plate - pentagon pointing down toward backstop */}
           <polygon
-            points="50,82 46,85 46,88 54,88 54,85"
+            points="46,82 54,82 54,86 50,90 46,86"
             fill="#fff"
           />
 
@@ -94,8 +94,8 @@ export function DiamondView({ runner1b, runner2b, runner3b, outs, players }: Dia
             <div
               key={i}
               className={`w-3 h-3 rounded-full border-2 ${i < outs
-                  ? 'bg-red-500 border-red-500'
-                  : 'border-gray-600 bg-gray-800'
+                ? 'bg-red-500 border-red-500'
+                : 'border-gray-600 bg-gray-800'
                 }`}
             />
           ))}
