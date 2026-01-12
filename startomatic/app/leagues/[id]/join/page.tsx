@@ -248,8 +248,8 @@ export default function JoinLeaguePage() {
                         type="button"
                         onClick={() => setSelectedColors(colors)}
                         className={`p-2 rounded border-2 transition ${selectedColors.name === colors.name
-                            ? 'border-white'
-                            : 'border-transparent hover:border-gray-500'
+                          ? 'border-white'
+                          : 'border-transparent hover:border-gray-500'
                           }`}
                       >
                         <div className="flex items-center space-x-1">
@@ -268,15 +268,38 @@ export default function JoinLeaguePage() {
                   </div>
                 </div>
 
+                {/* Team Logo Emoji */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Team Logo
+                  </label>
+                  <p className="text-xs text-gray-400 mb-3">Pick an emoji to represent your team</p>
+                  <div className="grid grid-cols-8 gap-2">
+                    {['⚾', '🏟️', '🦅', '🐻', '🦁', '🐯', '🐺', '🦇', '🦈', '🐍', '🦌', '🦬', '⭐', '🔥', '⚡', '💎'].map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => setLogo(emoji)}
+                        className={`w-10 h-10 text-2xl rounded-lg flex items-center justify-center transition ${logo === emoji
+                            ? 'bg-blue-600 ring-2 ring-blue-400'
+                            : 'bg-gray-700 hover:bg-gray-600'
+                          }`}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Preview */}
                 <div className="border-t border-gray-700 pt-6">
                   <h3 className="text-sm font-medium text-gray-300 mb-3">Preview</h3>
                   <div className="flex items-center space-x-4">
                     <div
-                      className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-3xl"
                       style={{ backgroundColor: selectedColors.primary }}
                     >
-                      {abbreviation || 'XXX'}
+                      {logo}
                     </div>
                     <div>
                       <div className="text-xl font-bold">
