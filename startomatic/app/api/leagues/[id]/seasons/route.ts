@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { validateSeasonRatingCounts } from '@/lib/validation'
+
+function uniq<T>(items: T[]): T[] {
+  return Array.from(new Set(items))
+}
 
 // POST /api/leagues/[id]/seasons - Create a season (commissioner only)
 export async function POST(
@@ -39,6 +44,32 @@ export async function POST(
 
     if (!Number.isFinite(year) || year < 1871 || year > 2100) {
       return NextResponse.json({ error: 'Season year is invalid' }, { status: 400 })
+    }
+
+    const [{ data: battingRatings }, { data: pitchingRatings }] = await Promise.all([
+      supabase
+        .from('player_ratings')
+        .select('player_id')
+        .eq('year', year)
+        .eq('rating_type', 'batting')
+        .limit(5000),
+      supabase
+        .from('player_ratings')
+        .select('player_id')
+        .eq('year', year)
+        .eq('rating_type', 'pitching')
+        .limit(5000),
+    ])
+
+    const battingCount = uniq((battingRatings || []).map((r: any) => r.player_id as string).filter(Boolean)).length
+    const pitchingCount = uniq((pitchingRatings || []).map((r: any) => r.player_id as string).filter(Boolean)).length
+    const ratingsCheck = validateSeasonRatingCounts({ battingCount, pitchingCount })
+
+    if (!ratingsCheck.ok) {
+      return NextResponse.json(
+        { error: ratingsCheck.errors.join(' ') },
+        { status: 400 }
+      )
     }
 
     // Keep it simple: creating a season makes it active.

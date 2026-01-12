@@ -45,14 +45,16 @@ export async function GET(request: NextRequest) {
     // Filter ratings by year and type if specified
     let filteredPlayers = players
     if (year || type) {
-      filteredPlayers = players?.map(player => ({
-        ...player,
-        ratings: player.ratings?.filter((r: { year: number; rating_type: string }) => {
-          if (year && r.year !== parseInt(year)) return false
-          if (type && r.rating_type !== type) return false
-          return true
-        })
-      }))
+      filteredPlayers = players
+        ?.map(player => ({
+          ...player,
+          ratings: player.ratings?.filter((r: { year: number; rating_type: string }) => {
+            if (year && r.year !== parseInt(year)) return false
+            if (type && r.rating_type !== type) return false
+            return true
+          })
+        }))
+        .filter(player => (player.ratings?.length || 0) > 0)
     }
 
     return NextResponse.json({ 

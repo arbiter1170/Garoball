@@ -1,6 +1,8 @@
 // API route for games
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { validateGameSetup } from '@/lib/validation'
+import type { PlayerRating } from '@/types'
 import { SeededRng } from '@/lib/rng'
 
 // GET /api/games - List games (with filters)
@@ -94,6 +96,58 @@ export async function POST(request: NextRequest) {
     if (!home_pitcher_id || !away_pitcher_id) {
       return NextResponse.json(
         { error: 'Starting pitchers are required' }, 
+        { status: 400 }
+      )
+    }
+
+    const { data: season, error: seasonError } = await supabase
+      .from('seasons')
+      .select('id, year')
+      .eq('id', season_id)
+      .single()
+
+    if (seasonError || !season) {
+      return NextResponse.json({ error: 'Season not found' }, { status: 404 })
+    }
+
+    if (!Array.isArray(home_lineup) || !Array.isArray(away_lineup)) {
+      return NextResponse.json({ error: 'Lineups must be arrays' }, { status: 400 })
+    }
+
+    const battingIds = [...home_lineup, ...away_lineup]
+    const pitcherIds = [home_pitcher_id, away_pitcher_id].filter(Boolean)
+
+    const [{ data: battingRatings }, { data: pitchingRatings }] = await Promise.all([
+      supabase
+        .from('player_ratings')
+        .select('*')
+        .eq('year', season.year)
+        .eq('rating_type', 'batting')
+        .in('player_id', battingIds),
+      supabase
+        .from('player_ratings')
+        .select('*')
+        .eq('year', season.year)
+        .eq('rating_type', 'pitching')
+        .in('player_id', pitcherIds),
+    ])
+
+    const ratingsMap = new Map<string, PlayerRating>()
+    ;[...(battingRatings || []), ...(pitchingRatings || [])].forEach((rating: any) => {
+      ratingsMap.set(`${rating.player_id}:${rating.rating_type}`, rating as PlayerRating)
+    })
+
+    const gameValidation = validateGameSetup({
+      homeLineup: home_lineup,
+      awayLineup: away_lineup,
+      homePitcherId: home_pitcher_id,
+      awayPitcherId: away_pitcher_id,
+      ratings: ratingsMap
+    })
+
+    if (!gameValidation.ok) {
+      return NextResponse.json(
+        { error: gameValidation.errors.join(' ') },
         { status: 400 }
       )
     }

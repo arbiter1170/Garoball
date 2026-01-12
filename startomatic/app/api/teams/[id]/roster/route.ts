@@ -58,7 +58,7 @@ export async function POST(
     // Check if user owns the team
     const { data: team } = await supabase
       .from('teams')
-      .select('owner_id')
+      .select('owner_id, league_id')
       .eq('id', id)
       .single()
 
@@ -71,6 +71,50 @@ export async function POST(
 
     if (!player_id) {
       return NextResponse.json({ error: 'Player ID is required' }, { status: 400 })
+    }
+
+    let seasonForRoster: { id: string; year: number; league_id: string } | null = null
+    if (season_id) {
+      const { data: season, error: seasonError } = await supabase
+        .from('seasons')
+        .select('id, year, league_id')
+        .eq('id', season_id)
+        .single()
+
+      if (seasonError || !season) {
+        return NextResponse.json({ error: 'Season not found' }, { status: 404 })
+      }
+
+      if (season.league_id !== team.league_id) {
+        return NextResponse.json({ error: 'Season does not belong to this league' }, { status: 400 })
+      }
+
+      seasonForRoster = season
+    } else {
+      const { data: activeSeason } = await supabase
+        .from('seasons')
+        .select('id, year, league_id')
+        .eq('league_id', team.league_id)
+        .eq('status', 'active')
+        .maybeSingle()
+
+      seasonForRoster = activeSeason || null
+    }
+
+    if (seasonForRoster) {
+      const { data: ratings } = await supabase
+        .from('player_ratings')
+        .select('id')
+        .eq('player_id', player_id)
+        .eq('year', seasonForRoster.year)
+        .limit(1)
+
+      if (!ratings || ratings.length === 0) {
+        return NextResponse.json(
+          { error: `Player does not have ratings for ${seasonForRoster.year}` },
+          { status: 400 }
+        )
+      }
     }
 
     // Check if player is already on roster
@@ -96,7 +140,7 @@ export async function POST(
         player_id,
         position: position || null,
         jersey_number: jersey_number || null,
-        season_id: season_id || null,
+        season_id: seasonForRoster?.id || season_id || null,
         is_active: true
       })
       .select(`
