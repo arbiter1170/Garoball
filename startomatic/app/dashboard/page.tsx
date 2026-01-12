@@ -48,7 +48,14 @@ export default async function DashboardPage() {
     const { data: games } = await supabase
       .from('games')
       .select(`
-        *,
+        id,
+        status,
+        created_at,
+        inning,
+        half,
+        outs,
+        home_team_id,
+        away_team_id,
         home_team:teams!home_team_id (id, name, abbreviation, primary_color),
         away_team:teams!away_team_id (id, name, abbreviation, primary_color)
       `)
