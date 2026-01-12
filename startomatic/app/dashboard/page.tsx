@@ -67,10 +67,9 @@ export default async function DashboardPage() {
 
     recentGames = games || []
     
-    // Pass all games; ActiveGamesPanel will filter active ones
-    activeGames = games || []
-        profile={profile} 
-        // TODO: Replace hardcoded 0 with actual unread news/notifications count for this user from the database
+    // Filter only in-progress games for the active games panel
+    activeGames = (games || []).filter((g: { status: string }) => g.status === 'in_progress')
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">

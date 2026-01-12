@@ -21,8 +21,11 @@ interface ActiveGamesPanelProps {
 }
 
 export function ActiveGamesPanel({ games, userTeamIds }: ActiveGamesPanelProps) {
-    // games are already filtered by the parent component
-    if (games.length === 0) {
+    // Defensive check: ensure only in_progress games are displayed
+    // even if parent filtering logic changes in the future
+    const activeGames = games.filter(g => g.status === 'in_progress')
+    
+    if (activeGames.length === 0) {
         return null
     }
 
@@ -32,12 +35,12 @@ export function ActiveGamesPanel({ games, userTeamIds }: ActiveGamesPanelProps) 
                 <span className="text-xl">🎮</span>
                 <h2 className="text-lg font-bold text-yellow-200">Active Games</h2>
                 <span className="bg-yellow-600 text-yellow-100 text-xs font-bold px-2 py-0.5 rounded-full">
-                    {games.length} LIVE
+                    {activeGames.length} LIVE
                 </span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {games.map(game => {
+                {activeGames.map(game => {
                     const isUserHome = userTeamIds.includes(game.home_team.id)
                     const isUserAway = userTeamIds.includes(game.away_team.id)
                     const userTeam = isUserHome ? game.home_team : (isUserAway ? game.away_team : null)
