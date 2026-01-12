@@ -27,10 +27,11 @@ export default function JoinLeaguePage() {
   const [selectedTeamId, setSelectedTeamId] = useState('')
   const [loadingTeams, setLoadingTeams] = useState(false)
   const [joining, setJoining] = useState(false)
-  
+
   const [name, setName] = useState('')
   const [abbreviation, setAbbreviation] = useState('')
   const [city, setCity] = useState('')
+  const [logo, setLogo] = useState('⚾')
   const [selectedColors, setSelectedColors] = useState(TEAM_COLORS[0])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -194,107 +195,106 @@ export default function JoinLeaguePage() {
                 If your league allows custom teams, you can create one here.
               </p>
               <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                Team Name *
-              </label>
-              <Input
-                id="name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Yankees, Red Sox, Cubs"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="abbreviation" className="block text-sm font-medium text-gray-300 mb-2">
-                Abbreviation * (3 letters)
-              </label>
-              <Input
-                id="abbreviation"
-                type="text"
-                required
-                maxLength={3}
-                value={abbreviation}
-                onChange={(e) => setAbbreviation(e.target.value.toUpperCase())}
-                placeholder="e.g., NYY, BOS, CHC"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-2">
-                City (optional)
-              </label>
-              <Input
-                id="city"
-                type="text"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="e.g., New York, Boston, Chicago"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Team Colors
-              </label>
-              <div className="grid grid-cols-4 gap-2">
-                {TEAM_COLORS.map((colors) => (
-                  <button
-                    key={colors.name}
-                    type="button"
-                    onClick={() => setSelectedColors(colors)}
-                    className={`p-2 rounded border-2 transition ${
-                      selectedColors.name === colors.name
-                        ? 'border-white'
-                        : 'border-transparent hover:border-gray-500'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-1">
-                      <div
-                        className="w-6 h-6 rounded"
-                        style={{ backgroundColor: colors.primary }}
-                      />
-                      <div
-                        className="w-6 h-6 rounded"
-                        style={{ backgroundColor: colors.secondary }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-400 mt-1">{colors.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Preview */}
-            <div className="border-t border-gray-700 pt-6">
-              <h3 className="text-sm font-medium text-gray-300 mb-3">Preview</h3>
-              <div className="flex items-center space-x-4">
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
-                  style={{ backgroundColor: selectedColors.primary }}
-                >
-                  {abbreviation || 'XXX'}
-                </div>
                 <div>
-                  <div className="text-xl font-bold">
-                    {city && `${city} `}{name || 'Team Name'}
-                  </div>
-                  <div className="text-gray-400">{abbreviation || 'XXX'}</div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+                    Team Name *
+                  </label>
+                  <Input
+                    id="name"
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g., Yankees, Red Sox, Cubs"
+                  />
                 </div>
-              </div>
-            </div>
 
-            <div className="flex justify-end space-x-4 pt-4">
-              <Link href={`/leagues/${leagueId}`}>
-                <Button variant="ghost" type="button">Cancel</Button>
-              </Link>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Team'}
-              </Button>
-            </div>
+                <div>
+                  <label htmlFor="abbreviation" className="block text-sm font-medium text-gray-300 mb-2">
+                    Abbreviation * (3 letters)
+                  </label>
+                  <Input
+                    id="abbreviation"
+                    type="text"
+                    required
+                    maxLength={3}
+                    value={abbreviation}
+                    onChange={(e) => setAbbreviation(e.target.value.toUpperCase())}
+                    placeholder="e.g., NYY, BOS, CHC"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="city" className="block text-sm font-medium text-gray-300 mb-2">
+                    City (optional)
+                  </label>
+                  <Input
+                    id="city"
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="e.g., New York, Boston, Chicago"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Team Colors
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {TEAM_COLORS.map((colors) => (
+                      <button
+                        key={colors.name}
+                        type="button"
+                        onClick={() => setSelectedColors(colors)}
+                        className={`p-2 rounded border-2 transition ${selectedColors.name === colors.name
+                            ? 'border-white'
+                            : 'border-transparent hover:border-gray-500'
+                          }`}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <div
+                            className="w-6 h-6 rounded"
+                            style={{ backgroundColor: colors.primary }}
+                          />
+                          <div
+                            className="w-6 h-6 rounded"
+                            style={{ backgroundColor: colors.secondary }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-400 mt-1">{colors.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="border-t border-gray-700 pt-6">
+                  <h3 className="text-sm font-medium text-gray-300 mb-3">Preview</h3>
+                  <div className="flex items-center space-x-4">
+                    <div
+                      className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold text-white"
+                      style={{ backgroundColor: selectedColors.primary }}
+                    >
+                      {abbreviation || 'XXX'}
+                    </div>
+                    <div>
+                      <div className="text-xl font-bold">
+                        {city && `${city} `}{name || 'Team Name'}
+                      </div>
+                      <div className="text-gray-400">{abbreviation || 'XXX'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-4 pt-4">
+                  <Link href={`/leagues/${leagueId}`}>
+                    <Button variant="ghost" type="button">Cancel</Button>
+                  </Link>
+                  <Button type="submit" disabled={loading}>
+                    {loading ? 'Creating...' : 'Create Team'}
+                  </Button>
+                </div>
               </form>
             </div>
           </div>

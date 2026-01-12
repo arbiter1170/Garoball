@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     redirect('/login')
   }
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
   // Get recent games for user's teams
   const teamIds = teams?.map(t => t.id) || []
   let recentGames: unknown[] = []
-  
+
   if (teamIds.length > 0) {
     const { data: games } = await supabase
       .from('games')
@@ -52,7 +52,7 @@ export default async function DashboardPage() {
       .or(`home_team_id.in.(${teamIds.join(',')}),away_team_id.in.(${teamIds.join(',')})`)
       .order('created_at', { ascending: false })
       .limit(5)
-    
+
     recentGames = games || []
   }
 
@@ -83,7 +83,43 @@ export default async function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+
+        {/* Getting Started Banner - Show for new users */}
+        {(!teams || teams.length === 0) && (!ownedLeagues || ownedLeagues.length === 0) && (
+          <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 rounded-xl p-6 mb-8 border border-blue-600 shadow-lg">
+            <div className="flex flex-col md:flex-row md:items-center gap-6">
+              <div className="flex-shrink-0 text-5xl">🎮</div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-white mb-2">Welcome to Garoball!</h2>
+                <p className="text-blue-200 mb-4">
+                  Ready to build your baseball dynasty? Here&apos;s how to get started:
+                </p>
+                <div className="grid sm:grid-cols-3 gap-4 text-sm">
+                  <div className="bg-blue-950/50 rounded-lg p-3 border border-blue-700">
+                    <div className="font-bold text-white mb-1">1. Create a League</div>
+                    <p className="text-blue-300">Set up your own league with custom rules and settings.</p>
+                  </div>
+                  <div className="bg-blue-950/50 rounded-lg p-3 border border-blue-700">
+                    <div className="font-bold text-white mb-1">2. Add Teams</div>
+                    <p className="text-blue-300">Create teams and draft players from MLB history.</p>
+                  </div>
+                  <div className="bg-blue-950/50 rounded-lg p-3 border border-blue-700">
+                    <div className="font-bold text-white mb-1">3. Play Ball!</div>
+                    <p className="text-blue-300">Simulate games with dice rolls and watch your team compete.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-shrink-0">
+                <Link href="/leagues/new">
+                  <Button className="bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-3 text-lg shadow-lg">
+                    🚀 Create Your League
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
@@ -106,13 +142,13 @@ export default async function DashboardPage() {
               {teams && teams.length > 0 ? (
                 <div className="space-y-3">
                   {teams.map((team) => (
-                    <Link 
-                      key={team.id} 
+                    <Link
+                      key={team.id}
                       href={`/teams/${team.id}`}
                       className="block p-3 rounded bg-gray-700 hover:bg-gray-600 transition"
                     >
                       <div className="flex items-center space-x-3">
-                        <div 
+                        <div
                           className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold"
                           style={{ backgroundColor: team.primary_color }}
                         >
@@ -167,13 +203,12 @@ export default async function DashboardPage() {
                             </div>
                           </div>
                           <div className="ml-4 text-right">
-                            <span className={`text-sm px-2 py-1 rounded ${
-                              g.status === 'completed' ? 'bg-green-900 text-green-200' :
-                              g.status === 'in_progress' ? 'bg-yellow-900 text-yellow-200' :
-                              'bg-gray-600 text-gray-300'
-                            }`}>
+                            <span className={`text-sm px-2 py-1 rounded ${g.status === 'completed' ? 'bg-green-900 text-green-200' :
+                                g.status === 'in_progress' ? 'bg-yellow-900 text-yellow-200' :
+                                  'bg-gray-600 text-gray-300'
+                              }`}>
                               {g.status === 'completed' ? 'Final' :
-                               g.status === 'in_progress' ? 'Live' : 'Scheduled'}
+                                g.status === 'in_progress' ? 'Live' : 'Scheduled'}
                             </span>
                           </div>
                         </div>
