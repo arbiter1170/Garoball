@@ -46,7 +46,7 @@ export function RosterManager({ teamId, initialRoster, seasonYear }: RosterManag
 
         setSearching(true)
         try {
-            const res = await fetch(`/api/players/search?q=${encodeURIComponent(searchQuery)}&year=${seasonYear}`)
+            const res = await fetch(`/api/players?search=${encodeURIComponent(searchQuery)}&year=${seasonYear}`)
             if (res.ok) {
                 const data = await res.json()
                 setSearchResults(data.players || [])
@@ -82,12 +82,12 @@ export function RosterManager({ teamId, initialRoster, seasonYear }: RosterManag
         }
     }
 
-    const removePlayer = async (rosterId: string) => {
+    const removePlayer = async (rosterId: string, playerId: string) => {
         if (!confirm('Remove this player from your roster?')) return
 
         setRemoving(rosterId)
         try {
-            const res = await fetch(`/api/teams/${teamId}/roster/${rosterId}`, {
+            const res = await fetch(`/api/teams/${teamId}/roster?player_id=${encodeURIComponent(playerId)}`, {
                 method: 'DELETE'
             })
 
@@ -183,7 +183,7 @@ export function RosterManager({ teamId, initialRoster, seasonYear }: RosterManag
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => removePlayer(entry.id)}
+                                        onClick={() => removePlayer(entry.id, entry.player_id)}
                                         disabled={removing === entry.id}
                                         className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
                                     >
@@ -215,7 +215,7 @@ export function RosterManager({ teamId, initialRoster, seasonYear }: RosterManag
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => removePlayer(entry.id)}
+                                        onClick={() => removePlayer(entry.id, entry.player_id)}
                                         disabled={removing === entry.id}
                                         className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
                                     >

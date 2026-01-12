@@ -138,7 +138,7 @@ export default async function LeagueDetailPage({ params }: PageProps) {
                     <p className="text-green-300 text-sm mb-3">
                       Create teams, draft specific players, then create a season. More control, more time.
                     </p>
-                    <Link href={`/leagues/${id}/teams/new`}>
+                    <Link href={`/leagues/${id}/join`}>
                       <Button variant="outline" className="w-full border-green-500 text-green-200 hover:bg-green-800">
                         Create Team Manually
                       </Button>
