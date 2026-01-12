@@ -23,7 +23,7 @@ import { AchievementToastContainer } from '@/components/game/AchievementToast'
 type GameTab = 'live' | 'boxscore' | 'plays'
 
 // Extended Team type that includes league info from joined query
-type TeamWithLeague = Team & { league?: { id: string; name: string } }
+export type TeamWithLeague = Team & { league?: { id: string; name: string } }
 
 export default function GamePage() {
   const params = useParams()
