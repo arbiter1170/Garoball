@@ -58,8 +58,8 @@ export default async function DashboardPage() {
 
     recentGames = games || []
     
-    // Filter for active games (in_progress status)
-    activeGames = (games || []).filter((g: { status: string }) => g.status === 'in_progress')
+    // Pass all games; ActiveGamesPanel will filter active ones
+    activeGames = games || []
   }
 
   return (
