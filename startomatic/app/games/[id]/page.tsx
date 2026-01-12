@@ -291,13 +291,7 @@ export default function GamePage() {
         {/* Team Context Badge - shows which team the user owns in this game */}
         {userTeam && userTeamLeague && (
           <TeamContextBadge
-            team={{
-              id: userTeam.id,
-              name: userTeam.name,
-              abbreviation: userTeam.abbreviation,
-              city: userTeam.city,
-              primary_color: userTeam.primary_color
-            }}
+            team={userTeam}
             league={userTeamLeague}
             showBackLink={true}
           />
