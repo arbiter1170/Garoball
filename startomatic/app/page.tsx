@@ -77,6 +77,12 @@ export default function Home() {
                 🎮 START PLAYING — It&apos;s Free
               </Link>
               <Link
+                href="/dashboard"
+                className="block w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-xl transition-colors"
+              >
+                🧪 TRY THE DEMO
+              </Link>
+              <Link
                 href="/login"
                 className="block w-full bg-[#1e3a8a] hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all hover:shadow-lg"
               >
